@@ -44,6 +44,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.dslul.openboard.inputmethod.accessibility.AccessibilityUtils;
@@ -55,6 +56,8 @@ import org.dslul.openboard.inputmethod.latin.AudioAndHapticFeedbackManager;
 import org.dslul.openboard.inputmethod.latin.R;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
+import org.dslul.openboard.inputmethod.latin.ciphers.CaesarCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.EnigmaCipher;
 import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.define.DebugFlags;
 import org.dslul.openboard.inputmethod.latin.settings.Settings;
@@ -483,8 +486,10 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         final Context context = getContext();
         final SharedPreferences prefs = Settings.getInstance().getSharedPreferences();
 
+        final ScrollView scrollView = new ScrollView(context);
         final LinearLayout container = new LinearLayout(context);
         container.setOrientation(LinearLayout.VERTICAL);
+        scrollView.addView(container);
         final int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16,
                 getResources().getDisplayMetrics());
         container.setPadding(padding, padding / 2, padding, 0);
@@ -518,6 +523,9 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         caesarSettings.addView(decryptButton);
         container.addView(caesarSettings);
 
+        addEnigmaPanel(context, container, prefs, false);
+        addEnigmaPanel(context, container, prefs, true);
+
         shiftInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -544,16 +552,147 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
         new AlertDialog.Builder(context)
                 .setTitle(R.string.cipher_tools_title)
-                .setView(container)
+                .setView(scrollView)
                 .setNegativeButton(R.string.close, null)
                 .show();
     }
 
+
+    private void addEnigmaPanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs, final boolean m4) {
+        final Button enigmaButton = new Button(context);
+        enigmaButton.setText(m4 ? R.string.enigma_m4 : R.string.enigma_m3);
+        container.addView(enigmaButton);
+
+        final LinearLayout enigmaSettings = new LinearLayout(context);
+        enigmaSettings.setOrientation(LinearLayout.VERTICAL);
+        enigmaSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        enigmaSettings.addView(messageInput);
+
+        final EditText thinRotorInput = new EditText(context);
+        if (m4) {
+            thinRotorInput.setHint(R.string.enigma_thin_rotor_hint);
+            thinRotorInput.setText(prefs.getString(Settings.PREF_ENIGMA_M4_THIN_ROTOR, "Beta"));
+            enigmaSettings.addView(thinRotorInput);
+        }
+
+        final EditText rotorsInput = new EditText(context);
+        rotorsInput.setHint(R.string.enigma_rotors_hint);
+        rotorsInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_ROTORS
+                : Settings.PREF_ENIGMA_M3_ROTORS, "I II III"));
+        enigmaSettings.addView(rotorsInput);
+
+        final EditText reflectorInput = new EditText(context);
+        reflectorInput.setHint(R.string.enigma_reflector_hint);
+        reflectorInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_REFLECTOR
+                : Settings.PREF_ENIGMA_M3_REFLECTOR, m4 ? "B Thin" : "B"));
+        enigmaSettings.addView(reflectorInput);
+
+        final EditText positionsInput = new EditText(context);
+        positionsInput.setHint(R.string.enigma_positions_hint);
+        positionsInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_POSITIONS
+                : Settings.PREF_ENIGMA_M3_POSITIONS, m4 ? "AAAA" : "AAA"));
+        enigmaSettings.addView(positionsInput);
+
+        final EditText ringsInput = new EditText(context);
+        ringsInput.setHint(R.string.enigma_rings_hint);
+        ringsInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_RINGS
+                : Settings.PREF_ENIGMA_M3_RINGS, m4 ? "AAAA" : "AAA"));
+        enigmaSettings.addView(ringsInput);
+
+        final EditText plugboardInput = new EditText(context);
+        plugboardInput.setHint(R.string.enigma_plugboard_hint);
+        plugboardInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_PLUGBOARD
+                : Settings.PREF_ENIGMA_M3_PLUGBOARD, ""));
+        enigmaSettings.addView(plugboardInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        enigmaSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        enigmaSettings.addView(decryptButton);
+        container.addView(enigmaSettings);
+
+        enigmaButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                enigmaSettings.setVisibility(
+                        enigmaSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputEnigmaText(prefs, m4, messageInput, thinRotorInput, rotorsInput,
+                        reflectorInput, positionsInput, ringsInput, plugboardInput);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputEnigmaText(prefs, m4, messageInput, thinRotorInput, rotorsInput,
+                        reflectorInput, positionsInput, ringsInput, plugboardInput);
+            }
+        });
+    }
+
+    private void outputEnigmaText(final SharedPreferences prefs, final boolean m4,
+            final EditText messageInput, final EditText thinRotorInput, final EditText rotorsInput,
+            final EditText reflectorInput, final EditText positionsInput, final EditText ringsInput,
+            final EditText plugboardInput) {
+        saveEnigmaSettings(prefs, m4, thinRotorInput, rotorsInput, reflectorInput, positionsInput,
+                ringsInput, plugboardInput);
+        final EnigmaCipher cipher = m4
+                ? EnigmaCipher.createM4(thinRotorInput.getText().toString(),
+                        rotorsInput.getText().toString(), reflectorInput.getText().toString(),
+                        positionsInput.getText().toString(), ringsInput.getText().toString(),
+                        plugboardInput.getText().toString())
+                : EnigmaCipher.createM3(rotorsInput.getText().toString(),
+                        reflectorInput.getText().toString(), positionsInput.getText().toString(),
+                        ringsInput.getText().toString(), plugboardInput.getText().toString());
+        final String output = cipher.encrypt(messageInput.getText().toString());
+        if (!output.isEmpty()) {
+            mListener.onTextInput(output);
+        }
+    }
+
+    private void saveEnigmaSettings(final SharedPreferences prefs, final boolean m4,
+            final EditText thinRotorInput, final EditText rotorsInput, final EditText reflectorInput,
+            final EditText positionsInput, final EditText ringsInput, final EditText plugboardInput) {
+        final SharedPreferences.Editor editor = prefs.edit();
+        if (m4) {
+            editor.putString(Settings.PREF_ENIGMA_M4_THIN_ROTOR,
+                    thinRotorInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M4_ROTORS, rotorsInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M4_REFLECTOR,
+                    reflectorInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M4_POSITIONS,
+                    positionsInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M4_RINGS, ringsInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M4_PLUGBOARD,
+                    plugboardInput.getText().toString());
+        } else {
+            editor.putString(Settings.PREF_ENIGMA_M3_ROTORS, rotorsInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M3_REFLECTOR,
+                    reflectorInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M3_POSITIONS,
+                    positionsInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M3_RINGS, ringsInput.getText().toString());
+            editor.putString(Settings.PREF_ENIGMA_M3_PLUGBOARD,
+                    plugboardInput.getText().toString());
+        }
+        editor.apply();
+    }
+
     private void outputCaesarText(final SharedPreferences prefs, final EditText messageInput,
             final EditText shiftInput, final boolean decrypt) {
-        final int shift = saveCaesarShift(prefs, shiftInput);
-        final String output = applyCaesarCipher(messageInput.getText().toString(),
-                decrypt ? -shift : shift);
+        final CaesarCipher cipher = new CaesarCipher(saveCaesarShift(prefs, shiftInput));
+        final String input = messageInput.getText().toString();
+        final String output = decrypt ? cipher.decrypt(input) : cipher.encrypt(input);
         if (!output.isEmpty()) {
             mListener.onTextInput(output);
         }
@@ -569,21 +708,6 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         return shift;
     }
 
-    private static String applyCaesarCipher(final String input, final int shift) {
-        final int normalizedShift = ((shift % 26) + 26) % 26;
-        final StringBuilder result = new StringBuilder(input.length());
-        for (int i = 0; i < input.length(); i++) {
-            final char c = input.charAt(i);
-            if (c >= 'A' && c <= 'Z') {
-                result.append((char)('A' + (c - 'A' + normalizedShift) % 26));
-            } else if (c >= 'a' && c <= 'z') {
-                result.append((char)('a' + (c - 'a' + normalizedShift) % 26));
-            } else {
-                result.append(c);
-            }
-        }
-        return result.toString();
-    }
 
     @Override
     protected void onDetachedFromWindow() {

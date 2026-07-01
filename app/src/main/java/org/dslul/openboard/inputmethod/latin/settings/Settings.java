@@ -89,6 +89,28 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             "pref_show_cipher_key";
     public static final String PREF_CAESAR_CIPHER_SHIFT =
             "pref_caesar_cipher_shift";
+    public static final String PREF_ENIGMA_M3_ROTORS =
+            "pref_enigma_m3_rotors";
+    public static final String PREF_ENIGMA_M3_REFLECTOR =
+            "pref_enigma_m3_reflector";
+    public static final String PREF_ENIGMA_M3_POSITIONS =
+            "pref_enigma_m3_positions";
+    public static final String PREF_ENIGMA_M3_RINGS =
+            "pref_enigma_m3_rings";
+    public static final String PREF_ENIGMA_M3_PLUGBOARD =
+            "pref_enigma_m3_plugboard";
+    public static final String PREF_ENIGMA_M4_THIN_ROTOR =
+            "pref_enigma_m4_thin_rotor";
+    public static final String PREF_ENIGMA_M4_ROTORS =
+            "pref_enigma_m4_rotors";
+    public static final String PREF_ENIGMA_M4_REFLECTOR =
+            "pref_enigma_m4_reflector";
+    public static final String PREF_ENIGMA_M4_POSITIONS =
+            "pref_enigma_m4_positions";
+    public static final String PREF_ENIGMA_M4_RINGS =
+            "pref_enigma_m4_rings";
+    public static final String PREF_ENIGMA_M4_PLUGBOARD =
+            "pref_enigma_m4_plugboard";
     public static final String PREF_INCLUDE_OTHER_IMES_IN_LANGUAGE_SWITCH_LIST =
             "pref_include_other_imes_in_language_switch_list";
     public static final String PREF_CUSTOM_INPUT_STYLES = "custom_input_styles";

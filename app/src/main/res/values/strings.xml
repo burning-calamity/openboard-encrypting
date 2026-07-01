@@ -184,6 +184,14 @@
     <string name="encrypt">Encrypt</string>
     <string name="decrypt">Decrypt</string>
     <string name="close">Close</string>
+    <string name="enigma_m3">Enigma M3</string>
+    <string name="enigma_m4">Enigma M4</string>
+    <string name="enigma_rotors_hint">Rotors, left to right (I II III)</string>
+    <string name="enigma_thin_rotor_hint">Thin rotor (Beta or Gamma)</string>
+    <string name="enigma_reflector_hint">Reflector (B/C or B Thin/C Thin)</string>
+    <string name="enigma_positions_hint">Start positions (AAA or AAAA)</string>
+    <string name="enigma_rings_hint">Ring settings (AAA or AAAA)</string>
+    <string name="enigma_plugboard_hint">Plugboard pairs (AB CD EF)</string>
     <!-- Preferences item for enabling clipboard history -->
     <string name="enable_clipboard_history">Enable clipboard history</string>
     <!-- Description for enabling/disabling clipboard history mentioning that if disabled, clipboard content is pasted -->
