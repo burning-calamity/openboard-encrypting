@@ -16,14 +16,19 @@
 
 package org.dslul.openboard.inputmethod.latin.suggestions;
 
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -34,7 +39,10 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -72,6 +80,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
     private final ViewGroup mSuggestionsStrip;
     private final ImageButton mVoiceKey;
     private final ImageButton mClipboardKey;
+    private final Button mCipherKey;
     private final ImageButton mOtherKey;
     MainKeyboardView mMainKeyboardView;
 
@@ -133,6 +142,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         mSuggestionsStrip = findViewById(R.id.suggestions_strip);
         mVoiceKey = findViewById(R.id.suggestions_strip_voice_key);
         mClipboardKey = findViewById(R.id.suggestions_strip_clipboard_key);
+        mCipherKey = findViewById(R.id.suggestions_strip_cipher_key);
         mOtherKey = findViewById(R.id.suggestions_strip_other_key);
         mStripVisibilityGroup = new StripVisibilityGroup(this, mSuggestionsStrip);
 
@@ -175,6 +185,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         mClipboardKey.setImageDrawable(iconClipboard);
         mClipboardKey.setOnClickListener(this);
         mClipboardKey.setOnLongClickListener(this);
+        mCipherKey.setOnClickListener(this);
 
         mOtherKey.setImageDrawable(iconIncognito);
     }
@@ -194,6 +205,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         final SettingsValues currentSettingsValues = Settings.getInstance().getCurrent();
         mVoiceKey.setVisibility(currentSettingsValues.mShowsVoiceInputKey ? VISIBLE : GONE);
         mClipboardKey.setVisibility(currentSettingsValues.mShowsClipboardKey ? VISIBLE : (mVoiceKey.getVisibility() == GONE ? INVISIBLE : GONE));
+        mCipherKey.setVisibility(currentSettingsValues.mShowsCipherKey ? VISIBLE : GONE);
         mOtherKey.setVisibility(currentSettingsValues.mIncognitoModeEnabled ? VISIBLE : INVISIBLE);
     }
 
@@ -448,6 +460,10 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
                     false /* isKeyRepeat */);
             return;
         }
+        if (view == mCipherKey) {
+            showCipherDialog();
+            return;
+        }
 
         final Object tag = view.getTag();
         // {@link Integer} tag is set at
@@ -461,6 +477,112 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
             final SuggestedWordInfo wordInfo = mSuggestedWords.getInfo(index);
             mListener.pickSuggestionManually(wordInfo);
         }
+    }
+
+    private void showCipherDialog() {
+        final Context context = getContext();
+        final SharedPreferences prefs = Settings.getInstance().getSharedPreferences();
+
+        final LinearLayout container = new LinearLayout(context);
+        container.setOrientation(LinearLayout.VERTICAL);
+        final int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16,
+                getResources().getDisplayMetrics());
+        container.setPadding(padding, padding / 2, padding, 0);
+
+        final Button caesarButton = new Button(context);
+        caesarButton.setText(R.string.caesar_cipher);
+        container.addView(caesarButton);
+
+        final LinearLayout caesarSettings = new LinearLayout(context);
+        caesarSettings.setOrientation(LinearLayout.VERTICAL);
+        caesarSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        caesarSettings.addView(messageInput);
+
+        final EditText shiftInput = new EditText(context);
+        shiftInput.setHint(R.string.caesar_shift);
+        shiftInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        shiftInput.setText(String.valueOf(prefs.getInt(Settings.PREF_CAESAR_CIPHER_SHIFT, 3)));
+        caesarSettings.addView(shiftInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        caesarSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        caesarSettings.addView(decryptButton);
+        container.addView(caesarSettings);
+
+        shiftInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                saveCaesarShift(prefs, shiftInput);
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+        caesarButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                caesarSettings.setVisibility(
+                        caesarSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputCaesarText(prefs, messageInput, shiftInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputCaesarText(prefs, messageInput, shiftInput, true);
+            }
+        });
+
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.cipher_tools_title)
+                .setView(container)
+                .setNegativeButton(R.string.close, null)
+                .show();
+    }
+
+    private void outputCaesarText(final SharedPreferences prefs, final EditText messageInput,
+            final EditText shiftInput, final boolean decrypt) {
+        final int shift = saveCaesarShift(prefs, shiftInput);
+        final String output = applyCaesarCipher(messageInput.getText().toString(),
+                decrypt ? -shift : shift);
+        if (!output.isEmpty()) {
+            mListener.onTextInput(output);
+        }
+    }
+
+    private int saveCaesarShift(final SharedPreferences prefs, final EditText shiftInput) {
+        int shift = 3;
+        try {
+            shift = Integer.parseInt(shiftInput.getText().toString());
+        } catch (NumberFormatException ignored) {
+        }
+        prefs.edit().putInt(Settings.PREF_CAESAR_CIPHER_SHIFT, shift).apply();
+        return shift;
+    }
+
+    private static String applyCaesarCipher(final String input, final int shift) {
+        final int normalizedShift = ((shift % 26) + 26) % 26;
+        final StringBuilder result = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            final char c = input.charAt(i);
+            if (c >= 'A' && c <= 'Z') {
+                result.append((char)('A' + (c - 'A' + normalizedShift) % 26));
+            } else if (c >= 'a' && c <= 'z') {
+                result.append((char)('a' + (c - 'a' + normalizedShift) % 26));
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 
     @Override
