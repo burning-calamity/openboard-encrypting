@@ -85,6 +85,10 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             "pref_show_emoji_key";
     public static final String PREF_SHOW_CLIPBOARD_KEY =
             "pref_show_clipboard_key";
+    public static final String PREF_SHOW_CIPHER_KEY =
+            "pref_show_cipher_key";
+    public static final String PREF_CAESAR_CIPHER_SHIFT =
+            "pref_caesar_cipher_shift";
     public static final String PREF_INCLUDE_OTHER_IMES_IN_LANGUAGE_SWITCH_LIST =
             "pref_include_other_imes_in_language_switch_list";
     public static final String PREF_CUSTOM_INPUT_STYLES = "custom_input_styles";
@@ -210,6 +214,10 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
         } finally {
             mSettingsValuesLock.unlock();
         }
+    }
+
+    public SharedPreferences getSharedPreferences() {
+        return mPrefs;
     }
 
     // TODO: Remove this method and add proxy method to SettingsValues.
