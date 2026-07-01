@@ -111,6 +111,12 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             "pref_enigma_m4_rings";
     public static final String PREF_ENIGMA_M4_PLUGBOARD =
             "pref_enigma_m4_plugboard";
+    public static final String PREF_QUAGMIRE_PLAIN_KEYWORD =
+            "pref_quagmire_plain_keyword";
+    public static final String PREF_QUAGMIRE_CIPHER_KEYWORD =
+            "pref_quagmire_cipher_keyword";
+    public static final String PREF_QUAGMIRE_INDICATOR_KEYWORD =
+            "pref_quagmire_indicator_keyword";
     public static final String PREF_INCLUDE_OTHER_IMES_IN_LANGUAGE_SWITCH_LIST =
             "pref_include_other_imes_in_language_switch_list";
     public static final String PREF_CUSTOM_INPUT_STYLES = "custom_input_styles";

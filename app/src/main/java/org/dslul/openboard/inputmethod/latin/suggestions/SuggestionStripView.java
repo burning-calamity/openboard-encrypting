@@ -56,8 +56,12 @@ import org.dslul.openboard.inputmethod.latin.AudioAndHapticFeedbackManager;
 import org.dslul.openboard.inputmethod.latin.R;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
+import org.dslul.openboard.inputmethod.latin.ciphers.BaconianCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.CaesarCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.EnigmaCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.MessageCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.MorseCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.QuagmireCipher;
 import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.define.DebugFlags;
 import org.dslul.openboard.inputmethod.latin.settings.Settings;
@@ -525,6 +529,12 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
         addEnigmaPanel(context, container, prefs, false);
         addEnigmaPanel(context, container, prefs, true);
+        addSimpleCipherPanel(context, container, R.string.baconian_cipher, new BaconianCipher());
+        addSimpleCipherPanel(context, container, R.string.morse_code, new MorseCipher());
+        addQuagmirePanel(context, container, prefs, R.string.quagmire_i, QuagmireCipher.Variant.I);
+        addQuagmirePanel(context, container, prefs, R.string.quagmire_ii, QuagmireCipher.Variant.II);
+        addQuagmirePanel(context, container, prefs, R.string.quagmire_iii, QuagmireCipher.Variant.III);
+        addQuagmirePanel(context, container, prefs, R.string.quagmire_iv, QuagmireCipher.Variant.IV);
 
         shiftInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -557,6 +567,135 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
                 .show();
     }
 
+
+
+    private void addSimpleCipherPanel(final Context context, final LinearLayout container,
+            final int titleResId, final MessageCipher cipher) {
+        final Button cipherButton = new Button(context);
+        cipherButton.setText(titleResId);
+        container.addView(cipherButton);
+
+        final LinearLayout cipherSettings = new LinearLayout(context);
+        cipherSettings.setOrientation(LinearLayout.VERTICAL);
+        cipherSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        cipherSettings.addView(messageInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        cipherSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        cipherSettings.addView(decryptButton);
+        container.addView(cipherSettings);
+
+        cipherButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                cipherSettings.setVisibility(
+                        cipherSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputText(cipher.encrypt(messageInput.getText().toString()));
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputText(cipher.decrypt(messageInput.getText().toString()));
+            }
+        });
+    }
+
+    private void addQuagmirePanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs, final int titleResId, final QuagmireCipher.Variant variant) {
+        final Button quagmireButton = new Button(context);
+        quagmireButton.setText(titleResId);
+        container.addView(quagmireButton);
+
+        final LinearLayout quagmireSettings = new LinearLayout(context);
+        quagmireSettings.setOrientation(LinearLayout.VERTICAL);
+        quagmireSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        quagmireSettings.addView(messageInput);
+
+        final EditText plainKeywordInput = new EditText(context);
+        plainKeywordInput.setHint(R.string.quagmire_plain_keyword_hint);
+        plainKeywordInput.setText(prefs.getString(Settings.PREF_QUAGMIRE_PLAIN_KEYWORD, "KEYWORD"));
+        quagmireSettings.addView(plainKeywordInput);
+
+        final EditText cipherKeywordInput = new EditText(context);
+        cipherKeywordInput.setHint(R.string.quagmire_cipher_keyword_hint);
+        cipherKeywordInput.setText(prefs.getString(Settings.PREF_QUAGMIRE_CIPHER_KEYWORD, "CIPHER"));
+        quagmireSettings.addView(cipherKeywordInput);
+
+        final EditText indicatorKeywordInput = new EditText(context);
+        indicatorKeywordInput.setHint(R.string.quagmire_indicator_keyword_hint);
+        indicatorKeywordInput.setText(prefs.getString(Settings.PREF_QUAGMIRE_INDICATOR_KEYWORD, "KEY"));
+        quagmireSettings.addView(indicatorKeywordInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        quagmireSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        quagmireSettings.addView(decryptButton);
+        container.addView(quagmireSettings);
+
+        quagmireButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                quagmireSettings.setVisibility(
+                        quagmireSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputQuagmireText(prefs, variant, messageInput, plainKeywordInput,
+                        cipherKeywordInput, indicatorKeywordInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputQuagmireText(prefs, variant, messageInput, plainKeywordInput,
+                        cipherKeywordInput, indicatorKeywordInput, true);
+            }
+        });
+    }
+
+    private void outputQuagmireText(final SharedPreferences prefs,
+            final QuagmireCipher.Variant variant, final EditText messageInput,
+            final EditText plainKeywordInput, final EditText cipherKeywordInput,
+            final EditText indicatorKeywordInput, final boolean decrypt) {
+        prefs.edit()
+                .putString(Settings.PREF_QUAGMIRE_PLAIN_KEYWORD,
+                        plainKeywordInput.getText().toString())
+                .putString(Settings.PREF_QUAGMIRE_CIPHER_KEYWORD,
+                        cipherKeywordInput.getText().toString())
+                .putString(Settings.PREF_QUAGMIRE_INDICATOR_KEYWORD,
+                        indicatorKeywordInput.getText().toString())
+                .apply();
+        final QuagmireCipher cipher = new QuagmireCipher(variant,
+                plainKeywordInput.getText().toString(), cipherKeywordInput.getText().toString(),
+                indicatorKeywordInput.getText().toString());
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
+    }
+
+    private void outputText(final String output) {
+        if (!output.isEmpty()) {
+            mListener.onTextInput(output);
+        }
+    }
 
     private void addEnigmaPanel(final Context context, final LinearLayout container,
             final SharedPreferences prefs, final boolean m4) {

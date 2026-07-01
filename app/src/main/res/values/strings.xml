@@ -192,6 +192,15 @@
     <string name="enigma_positions_hint">Start positions (AAA or AAAA)</string>
     <string name="enigma_rings_hint">Ring settings (AAA or AAAA)</string>
     <string name="enigma_plugboard_hint">Plugboard pairs (AB CD EF)</string>
+    <string name="baconian_cipher">Baconian cipher</string>
+    <string name="morse_code">Morse code</string>
+    <string name="quagmire_i">Quagmire I</string>
+    <string name="quagmire_ii">Quagmire II</string>
+    <string name="quagmire_iii">Quagmire III</string>
+    <string name="quagmire_iv">Quagmire IV</string>
+    <string name="quagmire_plain_keyword_hint">Plain alphabet keyword</string>
+    <string name="quagmire_cipher_keyword_hint">Cipher alphabet keyword</string>
+    <string name="quagmire_indicator_keyword_hint">Indicator keyword</string>
     <!-- Preferences item for enabling clipboard history -->
     <string name="enable_clipboard_history">Enable clipboard history</string>
     <!-- Description for enabling/disabling clipboard history mentioning that if disabled, clipboard content is pasted -->
