@@ -211,6 +211,7 @@
     <string name="cipher_keyword_hint">Keyword</string>
     <string name="affine_a_hint">A multiplier (coprime with 26)</string>
     <string name="affine_b_hint">B shift</string>
+    <string name="purple_position_hint">Purple switch start (0-2)</string>
     <string-array name="cipher_direct_mode_labels">
         <item>@string/caesar_cipher</item>
         <item>@string/enigma_m3</item>

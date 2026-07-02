@@ -113,6 +113,12 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             "pref_affine_a";
     public static final String PREF_AFFINE_B =
             "pref_affine_b";
+    public static final String PREF_DIPLOMATIC_RED_KEYWORD =
+            "pref_diplomatic_red_keyword";
+    public static final String PREF_PURPLE_PLUGBOARD =
+            "pref_purple_plugboard";
+    public static final String PREF_PURPLE_POSITION =
+            "pref_purple_position";
     public static final String PREF_ENIGMA_M3_ROTORS =
             "pref_enigma_m3_rotors";
     public static final String PREF_ENIGMA_M3_REFLECTOR =

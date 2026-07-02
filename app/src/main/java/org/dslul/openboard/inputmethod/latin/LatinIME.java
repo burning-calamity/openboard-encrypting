@@ -1523,15 +1523,40 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (codePoint == Constants.CODE_SPACE && Settings.CIPHER_MODE_MORSE.equals(mode)) {
             return " / ";
         }
-        if (!Character.isLetterOrDigit(codePoint)) {
+        if (!isDirectCipherConsumedCodePoint(mode, codePoint)) {
             return null;
         }
         final String input = String.valueOf((char)codePoint);
         final String output = transformDirectCipherInput(mode, input);
-        if (Character.isLetter(codePoint)) {
+        if (shouldAdvanceDirectCipherPosition(mode, codePoint)) {
             mDirectCipherPosition++;
         }
         return output;
+    }
+
+    private boolean isDirectCipherConsumedCodePoint(final String mode, final int codePoint) {
+        if (Settings.CIPHER_MODE_MORSE.equals(mode)) {
+            return isAsciiLetter(codePoint) || (codePoint >= '0' && codePoint <= '9');
+        }
+        return isAsciiLetter(codePoint);
+    }
+
+    private boolean shouldAdvanceDirectCipherPosition(final String mode, final int codePoint) {
+        if (!isAsciiLetter(codePoint)) {
+            return false;
+        }
+        return Settings.CIPHER_MODE_ENIGMA_M3.equals(mode)
+                || Settings.CIPHER_MODE_ENIGMA_M4.equals(mode)
+                || Settings.CIPHER_MODE_VIGENERE.equals(mode)
+                || Settings.CIPHER_MODE_QUAGMIRE_I.equals(mode)
+                || Settings.CIPHER_MODE_QUAGMIRE_II.equals(mode)
+                || Settings.CIPHER_MODE_QUAGMIRE_III.equals(mode)
+                || Settings.CIPHER_MODE_QUAGMIRE_IV.equals(mode)
+                || Settings.CIPHER_MODE_PURPLE.equals(mode);
+    }
+
+    private static boolean isAsciiLetter(final int codePoint) {
+        return (codePoint >= 'A' && codePoint <= 'Z') || (codePoint >= 'a' && codePoint <= 'z');
     }
 
     private String transformDirectCipherInput(final String mode, final String input) {
@@ -1578,10 +1603,15 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                     .encrypt(input);
         }
         if (Settings.CIPHER_MODE_DIPLOMATIC_RED.equals(mode)) {
-            return new DiplomaticRedCipher().encrypt(input);
+            return new DiplomaticRedCipher(Settings.getInstance().getSharedPreferences().getString(
+                    Settings.PREF_DIPLOMATIC_RED_KEYWORD, "DIPLOMATICRED")).encrypt(input);
         }
         if (Settings.CIPHER_MODE_PURPLE.equals(mode)) {
-            return transformStatefulDirectCipher(new PurpleCipher(), input);
+            return transformStatefulDirectCipher(new PurpleCipher(
+                    Settings.getInstance().getSharedPreferences().getString(
+                            Settings.PREF_PURPLE_PLUGBOARD, ""),
+                    Settings.getInstance().getSharedPreferences().getInt(
+                            Settings.PREF_PURPLE_POSITION, 0)), input);
         }
         final int shift = Settings.getInstance().getSharedPreferences()
                 .getInt(Settings.PREF_CAESAR_CIPHER_SHIFT, 3);

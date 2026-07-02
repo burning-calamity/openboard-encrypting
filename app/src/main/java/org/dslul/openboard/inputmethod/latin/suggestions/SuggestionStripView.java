@@ -609,9 +609,8 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         addSimpleCipherPanel(context, container, R.string.atbash_cipher, new AtbashCipher());
         addVigenerePanel(context, container, prefs);
         addAffinePanel(context, container, prefs);
-        addSimpleCipherPanel(context, container, R.string.diplomatic_red_cipher,
-                new DiplomaticRedCipher());
-        addSimpleCipherPanel(context, container, R.string.purple_cipher, new PurpleCipher());
+        addDiplomaticRedPanel(context, container, prefs);
+        addPurplePanel(context, container, prefs);
 
         shiftInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -954,6 +953,139 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         } catch (NumberFormatException ignored) {
             return defaultValue;
         }
+    }
+
+
+    private void addDiplomaticRedPanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs) {
+        final Button redButton = new Button(context);
+        redButton.setText(R.string.diplomatic_red_cipher);
+        container.addView(redButton);
+
+        final LinearLayout redSettings = new LinearLayout(context);
+        redSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(redSettings);
+        redSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        redSettings.addView(messageInput);
+
+        final EditText keywordInput = new EditText(context);
+        keywordInput.setHint(R.string.cipher_keyword_hint);
+        keywordInput.setText(prefs.getString(Settings.PREF_DIPLOMATIC_RED_KEYWORD,
+                "DIPLOMATICRED"));
+        styleCipherInput(keywordInput);
+        redSettings.addView(keywordInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        redSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        redSettings.addView(decryptButton);
+        container.addView(redSettings);
+
+        redButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                redSettings.setVisibility(redSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputDiplomaticRedText(prefs, messageInput, keywordInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputDiplomaticRedText(prefs, messageInput, keywordInput, true);
+            }
+        });
+    }
+
+    private void outputDiplomaticRedText(final SharedPreferences prefs, final EditText messageInput,
+            final EditText keywordInput, final boolean decrypt) {
+        prefs.edit().putString(Settings.PREF_DIPLOMATIC_RED_KEYWORD,
+                keywordInput.getText().toString()).apply();
+        final DiplomaticRedCipher cipher = new DiplomaticRedCipher(keywordInput.getText().toString());
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
+    }
+
+    private void addPurplePanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs) {
+        final Button purpleButton = new Button(context);
+        purpleButton.setText(R.string.purple_cipher);
+        container.addView(purpleButton);
+
+        final LinearLayout purpleSettings = new LinearLayout(context);
+        purpleSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(purpleSettings);
+        purpleSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        purpleSettings.addView(messageInput);
+
+        final EditText plugboardInput = new EditText(context);
+        plugboardInput.setHint(R.string.enigma_plugboard_hint);
+        plugboardInput.setText(prefs.getString(Settings.PREF_PURPLE_PLUGBOARD, ""));
+        styleCipherInput(plugboardInput);
+        purpleSettings.addView(plugboardInput);
+
+        final EditText positionInput = new EditText(context);
+        positionInput.setHint(R.string.purple_position_hint);
+        positionInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        positionInput.setText(String.valueOf(prefs.getInt(Settings.PREF_PURPLE_POSITION, 0)));
+        styleCipherInput(positionInput);
+        purpleSettings.addView(positionInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        purpleSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        purpleSettings.addView(decryptButton);
+        container.addView(purpleSettings);
+
+        purpleButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                purpleSettings.setVisibility(
+                        purpleSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputPurpleText(prefs, messageInput, plugboardInput, positionInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputPurpleText(prefs, messageInput, plugboardInput, positionInput, true);
+            }
+        });
+    }
+
+    private void outputPurpleText(final SharedPreferences prefs, final EditText messageInput,
+            final EditText plugboardInput, final EditText positionInput, final boolean decrypt) {
+        final int position = readInt(positionInput, 0);
+        prefs.edit()
+                .putString(Settings.PREF_PURPLE_PLUGBOARD, plugboardInput.getText().toString())
+                .putInt(Settings.PREF_PURPLE_POSITION, position)
+                .apply();
+        final PurpleCipher cipher = new PurpleCipher(plugboardInput.getText().toString(), position);
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
     }
 
     private void addEnigmaPanel(final Context context, final LinearLayout container,
