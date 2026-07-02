@@ -65,12 +65,17 @@ import org.dslul.openboard.inputmethod.keyboard.KeyboardSwitcher;
 import org.dslul.openboard.inputmethod.keyboard.MainKeyboardView;
 import org.dslul.openboard.inputmethod.latin.Suggest.OnGetSuggestedWordsCallback;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
+import org.dslul.openboard.inputmethod.latin.ciphers.AffineCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.AtbashCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.BaconianCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.CaesarCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.EnigmaCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.DiplomaticRedCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MessageCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MorseCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.PurpleCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.QuagmireCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.VigenereCipher;
 import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.common.CoordinateUtils;
 import org.dslul.openboard.inputmethod.latin.common.InputPointers;
@@ -1541,6 +1546,26 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (Settings.CIPHER_MODE_QUAGMIRE_IV.equals(mode)) {
             return transformStatefulDirectCipher(createDirectQuagmireCipher(
                     QuagmireCipher.Variant.IV), input);
+        }
+        if (Settings.CIPHER_MODE_ATBASH.equals(mode)) {
+            return new AtbashCipher().encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_VIGENERE.equals(mode)) {
+            return transformStatefulDirectCipher(new VigenereCipher(
+                    Settings.getInstance().getSharedPreferences().getString(
+                            Settings.PREF_VIGENERE_KEYWORD, "KEY")), input);
+        }
+        if (Settings.CIPHER_MODE_AFFINE.equals(mode)) {
+            return new AffineCipher(
+                    Settings.getInstance().getSharedPreferences().getInt(Settings.PREF_AFFINE_A, 5),
+                    Settings.getInstance().getSharedPreferences().getInt(Settings.PREF_AFFINE_B, 8))
+                    .encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_DIPLOMATIC_RED.equals(mode)) {
+            return new DiplomaticRedCipher().encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_PURPLE.equals(mode)) {
+            return transformStatefulDirectCipher(new PurpleCipher(), input);
         }
         final int shift = Settings.getInstance().getSharedPreferences()
                 .getInt(Settings.PREF_CAESAR_CIPHER_SHIFT, 3);

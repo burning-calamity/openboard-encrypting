@@ -68,12 +68,17 @@ import org.dslul.openboard.inputmethod.latin.AudioAndHapticFeedbackManager;
 import org.dslul.openboard.inputmethod.latin.R;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
+import org.dslul.openboard.inputmethod.latin.ciphers.AffineCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.AtbashCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.BaconianCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.CaesarCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.EnigmaCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.DiplomaticRedCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MessageCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MorseCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.PurpleCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.QuagmireCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.VigenereCipher;
 import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.define.DebugFlags;
 import org.dslul.openboard.inputmethod.latin.settings.Settings;
@@ -566,12 +571,14 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
         final LinearLayout caesarSettings = new LinearLayout(context);
         caesarSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(caesarSettings);
         caesarSettings.setVisibility(GONE);
 
         final EditText messageInput = new EditText(context);
         messageInput.setHint(R.string.cipher_message_hint);
         messageInput.setMinLines(3);
         messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
         prefillMessageInput(messageInput);
         caesarSettings.addView(messageInput);
 
@@ -579,6 +586,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         shiftInput.setHint(R.string.caesar_shift);
         shiftInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
         shiftInput.setText(String.valueOf(prefs.getInt(Settings.PREF_CAESAR_CIPHER_SHIFT, 3)));
+        styleCipherInput(shiftInput);
         caesarSettings.addView(shiftInput);
 
         final Button encryptButton = new Button(context);
@@ -598,6 +606,12 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         addQuagmirePanel(context, container, prefs, R.string.quagmire_ii, QuagmireCipher.Variant.II);
         addQuagmirePanel(context, container, prefs, R.string.quagmire_iii, QuagmireCipher.Variant.III);
         addQuagmirePanel(context, container, prefs, R.string.quagmire_iv, QuagmireCipher.Variant.IV);
+        addSimpleCipherPanel(context, container, R.string.atbash_cipher, new AtbashCipher());
+        addVigenerePanel(context, container, prefs);
+        addAffinePanel(context, container, prefs);
+        addSimpleCipherPanel(context, container, R.string.diplomatic_red_cipher,
+                new DiplomaticRedCipher());
+        addSimpleCipherPanel(context, container, R.string.purple_cipher, new PurpleCipher());
 
         shiftInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -652,6 +666,19 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         }
     }
 
+    private void styleCipherPanel(final LinearLayout panel) {
+        final int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8,
+                getResources().getDisplayMetrics());
+        panel.setPadding(padding, padding, padding, padding);
+        panel.setBackgroundColor(0xFFEFEFEF);
+    }
+
+    private void styleCipherInput(final EditText input) {
+        input.setTextColor(Color.BLACK);
+        input.setHintTextColor(Color.DKGRAY);
+        input.setBackgroundColor(Color.WHITE);
+    }
+
     private void addSimpleCipherPanel(final Context context, final LinearLayout container,
             final int titleResId, final MessageCipher cipher) {
         final Button cipherButton = new Button(context);
@@ -660,12 +687,14 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
         final LinearLayout cipherSettings = new LinearLayout(context);
         cipherSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(cipherSettings);
         cipherSettings.setVisibility(GONE);
 
         final EditText messageInput = new EditText(context);
         messageInput.setHint(R.string.cipher_message_hint);
         messageInput.setMinLines(3);
         messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
         prefillMessageInput(messageInput);
         cipherSettings.addView(messageInput);
 
@@ -704,28 +733,33 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
         final LinearLayout quagmireSettings = new LinearLayout(context);
         quagmireSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(quagmireSettings);
         quagmireSettings.setVisibility(GONE);
 
         final EditText messageInput = new EditText(context);
         messageInput.setHint(R.string.cipher_message_hint);
         messageInput.setMinLines(3);
         messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
         prefillMessageInput(messageInput);
         quagmireSettings.addView(messageInput);
 
         final EditText plainKeywordInput = new EditText(context);
         plainKeywordInput.setHint(R.string.quagmire_plain_keyword_hint);
         plainKeywordInput.setText(prefs.getString(Settings.PREF_QUAGMIRE_PLAIN_KEYWORD, "KEYWORD"));
+        styleCipherInput(plainKeywordInput);
         quagmireSettings.addView(plainKeywordInput);
 
         final EditText cipherKeywordInput = new EditText(context);
         cipherKeywordInput.setHint(R.string.quagmire_cipher_keyword_hint);
         cipherKeywordInput.setText(prefs.getString(Settings.PREF_QUAGMIRE_CIPHER_KEYWORD, "CIPHER"));
+        styleCipherInput(cipherKeywordInput);
         quagmireSettings.addView(cipherKeywordInput);
 
         final EditText indicatorKeywordInput = new EditText(context);
         indicatorKeywordInput.setHint(R.string.quagmire_indicator_keyword_hint);
         indicatorKeywordInput.setText(prefs.getString(Settings.PREF_QUAGMIRE_INDICATOR_KEYWORD, "KEY"));
+        styleCipherInput(indicatorKeywordInput);
         quagmireSettings.addView(indicatorKeywordInput);
 
         final Button encryptButton = new Button(context);
@@ -782,6 +816,146 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         }
     }
 
+
+    private void addVigenerePanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs) {
+        final Button vigenereButton = new Button(context);
+        vigenereButton.setText(R.string.vigenere_cipher);
+        container.addView(vigenereButton);
+
+        final LinearLayout vigenereSettings = new LinearLayout(context);
+        vigenereSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(vigenereSettings);
+        vigenereSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        vigenereSettings.addView(messageInput);
+
+        final EditText keywordInput = new EditText(context);
+        keywordInput.setHint(R.string.cipher_keyword_hint);
+        keywordInput.setText(prefs.getString(Settings.PREF_VIGENERE_KEYWORD, "KEY"));
+        styleCipherInput(keywordInput);
+        vigenereSettings.addView(keywordInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        vigenereSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        vigenereSettings.addView(decryptButton);
+        container.addView(vigenereSettings);
+
+        vigenereButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                vigenereSettings.setVisibility(
+                        vigenereSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputVigenereText(prefs, messageInput, keywordInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputVigenereText(prefs, messageInput, keywordInput, true);
+            }
+        });
+    }
+
+    private void outputVigenereText(final SharedPreferences prefs, final EditText messageInput,
+            final EditText keywordInput, final boolean decrypt) {
+        prefs.edit().putString(Settings.PREF_VIGENERE_KEYWORD,
+                keywordInput.getText().toString()).apply();
+        final VigenereCipher cipher = new VigenereCipher(keywordInput.getText().toString());
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
+    }
+
+    private void addAffinePanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs) {
+        final Button affineButton = new Button(context);
+        affineButton.setText(R.string.affine_cipher);
+        container.addView(affineButton);
+
+        final LinearLayout affineSettings = new LinearLayout(context);
+        affineSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(affineSettings);
+        affineSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        affineSettings.addView(messageInput);
+
+        final EditText aInput = new EditText(context);
+        aInput.setHint(R.string.affine_a_hint);
+        aInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        aInput.setText(String.valueOf(prefs.getInt(Settings.PREF_AFFINE_A, 5)));
+        styleCipherInput(aInput);
+        affineSettings.addView(aInput);
+
+        final EditText bInput = new EditText(context);
+        bInput.setHint(R.string.affine_b_hint);
+        bInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        bInput.setText(String.valueOf(prefs.getInt(Settings.PREF_AFFINE_B, 8)));
+        styleCipherInput(bInput);
+        affineSettings.addView(bInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        affineSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        affineSettings.addView(decryptButton);
+        container.addView(affineSettings);
+
+        affineButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                affineSettings.setVisibility(
+                        affineSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputAffineText(prefs, messageInput, aInput, bInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputAffineText(prefs, messageInput, aInput, bInput, true);
+            }
+        });
+    }
+
+    private void outputAffineText(final SharedPreferences prefs, final EditText messageInput,
+            final EditText aInput, final EditText bInput, final boolean decrypt) {
+        final int a = readInt(aInput, 5);
+        final int b = readInt(bInput, 8);
+        prefs.edit().putInt(Settings.PREF_AFFINE_A, a).putInt(Settings.PREF_AFFINE_B, b).apply();
+        final AffineCipher cipher = new AffineCipher(a, b);
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
+    }
+
+    private int readInt(final EditText input, final int defaultValue) {
+        try {
+            return Integer.parseInt(input.getText().toString());
+        } catch (NumberFormatException ignored) {
+            return defaultValue;
+        }
+    }
+
     private void addEnigmaPanel(final Context context, final LinearLayout container,
             final SharedPreferences prefs, final boolean m4) {
         final Button enigmaButton = new Button(context);
@@ -790,12 +964,14 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
         final LinearLayout enigmaSettings = new LinearLayout(context);
         enigmaSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(enigmaSettings);
         enigmaSettings.setVisibility(GONE);
 
         final EditText messageInput = new EditText(context);
         messageInput.setHint(R.string.cipher_message_hint);
         messageInput.setMinLines(3);
         messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
         prefillMessageInput(messageInput);
         enigmaSettings.addView(messageInput);
 
@@ -803,6 +979,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         if (m4) {
             thinRotorInput.setHint(R.string.enigma_thin_rotor_hint);
             thinRotorInput.setText(prefs.getString(Settings.PREF_ENIGMA_M4_THIN_ROTOR, "Beta"));
+            styleCipherInput(thinRotorInput);
             enigmaSettings.addView(thinRotorInput);
         }
 
@@ -810,30 +987,35 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         rotorsInput.setHint(R.string.enigma_rotors_hint);
         rotorsInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_ROTORS
                 : Settings.PREF_ENIGMA_M3_ROTORS, "I II III"));
+        styleCipherInput(rotorsInput);
         enigmaSettings.addView(rotorsInput);
 
         final EditText reflectorInput = new EditText(context);
         reflectorInput.setHint(R.string.enigma_reflector_hint);
         reflectorInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_REFLECTOR
                 : Settings.PREF_ENIGMA_M3_REFLECTOR, m4 ? "B Thin" : "B"));
+        styleCipherInput(reflectorInput);
         enigmaSettings.addView(reflectorInput);
 
         final EditText positionsInput = new EditText(context);
         positionsInput.setHint(R.string.enigma_positions_hint);
         positionsInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_POSITIONS
                 : Settings.PREF_ENIGMA_M3_POSITIONS, m4 ? "AAAA" : "AAA"));
+        styleCipherInput(positionsInput);
         enigmaSettings.addView(positionsInput);
 
         final EditText ringsInput = new EditText(context);
         ringsInput.setHint(R.string.enigma_rings_hint);
         ringsInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_RINGS
                 : Settings.PREF_ENIGMA_M3_RINGS, m4 ? "AAAA" : "AAA"));
+        styleCipherInput(ringsInput);
         enigmaSettings.addView(ringsInput);
 
         final EditText plugboardInput = new EditText(context);
         plugboardInput.setHint(R.string.enigma_plugboard_hint);
         plugboardInput.setText(prefs.getString(m4 ? Settings.PREF_ENIGMA_M4_PLUGBOARD
                 : Settings.PREF_ENIGMA_M3_PLUGBOARD, ""));
+        styleCipherInput(plugboardInput);
         enigmaSettings.addView(plugboardInput);
 
         final Button encryptButton = new Button(context);

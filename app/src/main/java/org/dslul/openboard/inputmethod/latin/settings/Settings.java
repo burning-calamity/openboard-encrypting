@@ -102,6 +102,17 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String CIPHER_MODE_QUAGMIRE_II = "quagmire_ii";
     public static final String CIPHER_MODE_QUAGMIRE_III = "quagmire_iii";
     public static final String CIPHER_MODE_QUAGMIRE_IV = "quagmire_iv";
+    public static final String CIPHER_MODE_ATBASH = "atbash";
+    public static final String CIPHER_MODE_VIGENERE = "vigenere";
+    public static final String CIPHER_MODE_AFFINE = "affine";
+    public static final String CIPHER_MODE_DIPLOMATIC_RED = "diplomatic_red";
+    public static final String CIPHER_MODE_PURPLE = "purple";
+    public static final String PREF_VIGENERE_KEYWORD =
+            "pref_vigenere_keyword";
+    public static final String PREF_AFFINE_A =
+            "pref_affine_a";
+    public static final String PREF_AFFINE_B =
+            "pref_affine_b";
     public static final String PREF_ENIGMA_M3_ROTORS =
             "pref_enigma_m3_rotors";
     public static final String PREF_ENIGMA_M3_REFLECTOR =
