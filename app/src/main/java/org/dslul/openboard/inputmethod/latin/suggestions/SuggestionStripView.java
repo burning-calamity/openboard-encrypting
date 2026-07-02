@@ -511,7 +511,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
     public boolean handleCipherCodeInput(final int codePoint) {
         if (mCipherPopupWindow == null || !mCipherPopupWindow.isShowing()
-                || mCipherFocusedInput == null || !mCipherFocusedInput.hasFocus()) {
+                || mCipherFocusedInput == null) {
             return false;
         }
         final Editable editable = mCipherFocusedInput.getText();
@@ -680,7 +680,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         final int popupHeight = rootHeight <= 0 ? ViewGroup.LayoutParams.WRAP_CONTENT
                 : Math.min(maxPopupHeight, Math.max(getHeight(), rootHeight / 2));
         final PopupWindow popupWindow = new PopupWindow(scrollView,
-                ViewGroup.LayoutParams.MATCH_PARENT, popupHeight, true);
+                ViewGroup.LayoutParams.MATCH_PARENT, popupHeight, false);
         mCipherPopupWindow = popupWindow;
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popupWindow.setOutsideTouchable(false);
@@ -725,6 +725,12 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         input.setTextColor(Color.BLACK);
         input.setHintTextColor(Color.DKGRAY);
         input.setBackgroundColor(Color.WHITE);
+        input.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                mCipherFocusedInput = input;
+                input.requestFocus();
+            }
+        });
         input.setOnFocusChangeListener(new OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {

@@ -41,7 +41,10 @@ public final class MorseCipher implements MessageCipher {
                 }
                 output.append(morse).append(' ');
             } else {
-                output.append(c);
+                if (output.length() > 0 && output.charAt(output.length() - 1) != ' ') {
+                    output.append(' ');
+                }
+                output.append(c).append(' ');
             }
         }
         return output.toString().trim();
@@ -57,9 +60,27 @@ public final class MorseCipher implements MessageCipher {
             }
             final String[] symbols = words[i].trim().split("\\s+");
             for (String symbol : symbols) {
-                final String decoded = FROM_MORSE.get(symbol.trim().toUpperCase(Locale.US));
+                final String trimmedSymbol = symbol.trim();
+                if (trimmedSymbol.isEmpty()) {
+                    continue;
+                }
+                final String decoded = FROM_MORSE.get(trimmedSymbol.toUpperCase(Locale.US));
                 if (decoded != null) {
                     output.append(decoded);
+                    continue;
+                }
+                int morseEnd = 0;
+                while (morseEnd < trimmedSymbol.length()
+                        && (trimmedSymbol.charAt(morseEnd) == '.'
+                                || trimmedSymbol.charAt(morseEnd) == '-')) {
+                    morseEnd++;
+                }
+                final String morsePrefix = trimmedSymbol.substring(0, morseEnd);
+                final String prefixDecoded = FROM_MORSE.get(morsePrefix.toUpperCase(Locale.US));
+                if (prefixDecoded != null) {
+                    output.append(prefixDecoded).append(trimmedSymbol.substring(morseEnd));
+                } else {
+                    output.append(trimmedSymbol);
                 }
             }
         }

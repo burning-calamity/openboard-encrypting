@@ -40,24 +40,30 @@ public final class BaconianCipher implements MessageCipher {
     @Override
     public String decrypt(final String input) {
         final StringBuilder output = new StringBuilder(input.length() / 5);
-        final String[] tokens = input.toUpperCase(Locale.US).trim().split("\\s+");
-        for (String token : tokens) {
-            if (token.isEmpty()) {
+        final String[] tokens = input.trim().split("\\s+");
+        for (String originalToken : tokens) {
+            if (originalToken.isEmpty()) {
                 continue;
             }
-            if ("/".equals(token)) {
+            if ("/".equals(originalToken)) {
                 output.append(' ');
                 continue;
             }
-            token = token.replaceAll("[^AB]", "");
+            final String token = originalToken.toUpperCase(Locale.US).replaceAll("[^AB]", "");
             if (token.length() != 5) {
+                output.append(originalToken);
                 continue;
             }
+            boolean decoded = false;
             for (int j = 0; j < CODES.length; j++) {
                 if (CODES[j].equals(token)) {
                     output.append((char)('A' + j));
+                    decoded = true;
                     break;
                 }
+            }
+            if (!decoded) {
+                output.append(originalToken);
             }
         }
         return output.toString();
