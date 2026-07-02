@@ -22,7 +22,15 @@ public final class BaconianCipher implements MessageCipher {
                     output.append(' ');
                 }
                 output.append(CODES[index]);
-            } else if (!Character.isWhitespace(c)) {
+            } else if (Character.isWhitespace(c)) {
+                if (output.length() > 0) {
+                    output.append(' ');
+                }
+                output.append('/');
+            } else {
+                if (output.length() > 0) {
+                    output.append(' ');
+                }
                 output.append(c);
             }
         }
@@ -31,12 +39,22 @@ public final class BaconianCipher implements MessageCipher {
 
     @Override
     public String decrypt(final String input) {
-        final String normalized = input.toUpperCase(Locale.US).replaceAll("[^AB]", "");
-        final StringBuilder output = new StringBuilder(normalized.length() / 5);
-        for (int i = 0; i + 4 < normalized.length(); i += 5) {
-            final String code = normalized.substring(i, i + 5);
+        final StringBuilder output = new StringBuilder(input.length() / 5);
+        final String[] tokens = input.toUpperCase(Locale.US).trim().split("\\s+");
+        for (String token : tokens) {
+            if (token.isEmpty()) {
+                continue;
+            }
+            if ("/".equals(token)) {
+                output.append(' ');
+                continue;
+            }
+            token = token.replaceAll("[^AB]", "");
+            if (token.length() != 5) {
+                continue;
+            }
             for (int j = 0; j < CODES.length; j++) {
-                if (CODES[j].equals(code)) {
+                if (CODES[j].equals(token)) {
                     output.append((char)('A' + j));
                     break;
                 }

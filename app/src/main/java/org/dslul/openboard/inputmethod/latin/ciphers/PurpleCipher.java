@@ -3,7 +3,7 @@ package org.dslul.openboard.inputmethod.latin.ciphers;
 import java.util.Locale;
 
 /** Educational stepping substitution inspired by the historical Japanese Purple machine. */
-public final class PurpleCipher implements MessageCipher {
+public final class PurpleCipher implements PositionedMessageCipher {
     private static final String[] ALPHABETS = {
             "QWERTYUIOPASDFGHJKLZXCVBNM",
             "MNBVCXZLKJHGFDSAPOIUYTREWQ",
@@ -25,17 +25,27 @@ public final class PurpleCipher implements MessageCipher {
 
     @Override
     public String encrypt(final String input) {
-        return transform(input, false);
+        return encrypt(input, 0);
     }
 
     @Override
     public String decrypt(final String input) {
-        return transform(input, true);
+        return decrypt(input, 0);
     }
 
-    private String transform(final String input, final boolean decrypt) {
+    @Override
+    public String encrypt(final String input, final int position) {
+        return transform(input, false, position);
+    }
+
+    @Override
+    public String decrypt(final String input, final int position) {
+        return transform(input, true, position);
+    }
+
+    private String transform(final String input, final boolean decrypt, final int position) {
         final StringBuilder output = new StringBuilder(input.length());
-        int letters = 0;
+        int letters = Math.max(0, position);
         for (int i = 0; i < input.length(); i++) {
             final char c = input.charAt(i);
             final char upper = Character.toUpperCase(c);

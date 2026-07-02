@@ -73,6 +73,7 @@ import org.dslul.openboard.inputmethod.latin.ciphers.EnigmaCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.DiplomaticRedCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MessageCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MorseCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.PositionedMessageCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.PurpleCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.QuagmireCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.VigenereCipher;
@@ -1490,7 +1491,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         // TODO: We should reconsider which coordinate system should be used to represent
         // keyboard event. Also we should pull this up -- LatinIME has no business doing
         // this transformation, it should be done already before calling onEvent.
-        if (codePoint == Constants.CODE_DELETE || codePoint == Constants.CODE_ENTER) {
+        if (codePoint == Constants.CODE_DELETE) {
+            mDirectCipherPosition = Math.max(0, mDirectCipherPosition - 1);
+        } else if (codePoint == Constants.CODE_ENTER) {
             mDirectCipherPosition = 0;
         }
         final int keyX = mainKeyboardView.getKeyX(x);
@@ -1619,13 +1622,10 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     private String transformStatefulDirectCipher(final MessageCipher cipher, final String input) {
-        final StringBuilder prefix = new StringBuilder(mDirectCipherPosition + input.length());
-        for (int i = 0; i < mDirectCipherPosition; i++) {
-            prefix.append('A');
+        if (cipher instanceof PositionedMessageCipher) {
+            return ((PositionedMessageCipher)cipher).encrypt(input, mDirectCipherPosition);
         }
-        prefix.append(input);
-        final String output = cipher.encrypt(prefix.toString());
-        return output.substring(output.length() - input.length());
+        return cipher.encrypt(input);
     }
 
     private EnigmaCipher createDirectEnigmaM3Cipher() {
@@ -2013,7 +2013,8 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (!ProductionFlags.IS_HARDWARE_KEYBOARD_SUPPORTED) {
             return super.onKeyUp(keyCode, keyEvent);
         }
-        final long keyIdentifier = keyEvent.getDeviceId() << 32 + keyEvent.getKeyCode();
+        final long keyIdentifier = ((long)keyEvent.getDeviceId() << 32)
+                | (keyEvent.getKeyCode() & 0xFFFFFFFFL);
         if (mInputLogic.mCurrentlyPressedHardwareKeys.remove(keyIdentifier)) {
             return true;
         }

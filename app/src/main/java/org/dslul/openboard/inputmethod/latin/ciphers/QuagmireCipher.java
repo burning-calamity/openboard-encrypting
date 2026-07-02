@@ -3,7 +3,7 @@ package org.dslul.openboard.inputmethod.latin.ciphers;
 import java.util.Locale;
 
 /** Configurable Quagmire I-IV polyalphabetic substitution cipher. */
-public final class QuagmireCipher implements MessageCipher {
+public final class QuagmireCipher implements PositionedMessageCipher {
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     public enum Variant { I, II, III, IV }
@@ -23,17 +23,27 @@ public final class QuagmireCipher implements MessageCipher {
 
     @Override
     public String encrypt(final String input) {
-        return transform(input, false);
+        return encrypt(input, 0);
     }
 
     @Override
     public String decrypt(final String input) {
-        return transform(input, true);
+        return decrypt(input, 0);
     }
 
-    private String transform(final String input, final boolean decrypt) {
+    @Override
+    public String encrypt(final String input, final int position) {
+        return transform(input, false, position);
+    }
+
+    @Override
+    public String decrypt(final String input, final int position) {
+        return transform(input, true, position);
+    }
+
+    private String transform(final String input, final boolean decrypt, final int position) {
         final StringBuilder output = new StringBuilder(input.length());
-        int letterIndex = 0;
+        int letterIndex = Math.max(0, position);
         for (int i = 0; i < input.length(); i++) {
             final char c = input.charAt(i);
             final char upper = Character.toUpperCase(c);

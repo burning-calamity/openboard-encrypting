@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Enigma M3/M4-style cipher with configurable rotors, reflector, rings, positions, and plugboard.
  */
-public final class EnigmaCipher implements MessageCipher {
+public final class EnigmaCipher implements PositionedMessageCipher {
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final Map<String, RotorSpec> ROTORS = new HashMap<>();
     private static final Map<String, String> REFLECTORS = new HashMap<>();
@@ -65,16 +65,29 @@ public final class EnigmaCipher implements MessageCipher {
 
     @Override
     public String encrypt(final String input) {
-        return transform(input);
+        return encrypt(input, 0);
     }
 
     @Override
     public String decrypt(final String input) {
-        return transform(input);
+        return decrypt(input, 0);
     }
 
-    private String transform(final String input) {
+    @Override
+    public String encrypt(final String input, final int position) {
+        return transform(input, position);
+    }
+
+    @Override
+    public String decrypt(final String input, final int position) {
+        return transform(input, position);
+    }
+
+    private String transform(final String input, final int position) {
         final Rotor[] rotors = cloneRotors();
+        for (int i = 0; i < position; i++) {
+            stepRotors(rotors);
+        }
         final StringBuilder output = new StringBuilder(input.length());
         for (int i = 0; i < input.length(); i++) {
             final char c = input.charAt(i);
