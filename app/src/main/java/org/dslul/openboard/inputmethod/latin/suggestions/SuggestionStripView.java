@@ -21,6 +21,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -40,6 +41,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -108,6 +110,8 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
     private final ImageButton mClipboardKey;
     private final Button mCipherKey;
     private final ImageButton mOtherKey;
+    private EditText mCipherFocusedInput;
+    private PopupWindow mCipherPopupWindow;
     MainKeyboardView mMainKeyboardView;
 
     private final View mMoreSuggestionsContainer;
@@ -505,6 +509,39 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         }
     }
 
+    public boolean handleCipherCodeInput(final int codePoint) {
+        if (mCipherPopupWindow == null || !mCipherPopupWindow.isShowing()
+                || mCipherFocusedInput == null || !mCipherFocusedInput.hasFocus()) {
+            return false;
+        }
+        final Editable editable = mCipherFocusedInput.getText();
+        final int selectionStart = Math.max(0, mCipherFocusedInput.getSelectionStart());
+        final int selectionEnd = Math.max(0, mCipherFocusedInput.getSelectionEnd());
+        final int start = Math.min(selectionStart, selectionEnd);
+        final int end = Math.max(selectionStart, selectionEnd);
+        if (codePoint == Constants.CODE_DELETE) {
+            if (start != end) {
+                editable.delete(start, end);
+            } else if (start > 0) {
+                final int deleteStart = Character.offsetByCodePoints(editable, start, -1);
+                editable.delete(deleteStart, start);
+            }
+            return true;
+        }
+        final String text;
+        if (codePoint == Constants.CODE_ENTER) {
+            text = "\n";
+        } else if (codePoint == Constants.CODE_SPACE) {
+            text = " ";
+        } else if (codePoint > 0) {
+            text = new String(Character.toChars(codePoint));
+        } else {
+            return false;
+        }
+        editable.replace(start, end, text);
+        return true;
+    }
+
     private void showCipherDialog() {
         final Context context = getContext();
         final SharedPreferences prefs = Settings.getInstance().getSharedPreferences();
@@ -644,10 +681,19 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
                 : Math.min(maxPopupHeight, Math.max(getHeight(), rootHeight / 2));
         final PopupWindow popupWindow = new PopupWindow(scrollView,
                 ViewGroup.LayoutParams.MATCH_PARENT, popupHeight, true);
+        mCipherPopupWindow = popupWindow;
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popupWindow.setOutsideTouchable(false);
-        popupWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+        popupWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
         popupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+        popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override public void onDismiss() {
+                mCipherFocusedInput = null;
+                if (mCipherPopupWindow == popupWindow) {
+                    mCipherPopupWindow = null;
+                }
+            }
+        });
         closeButton.setOnClickListener(new OnClickListener() {
             @Override public void onClick(View v) {
                 popupWindow.dismiss();
@@ -679,6 +725,18 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         input.setTextColor(Color.BLACK);
         input.setHintTextColor(Color.DKGRAY);
         input.setBackgroundColor(Color.WHITE);
+        input.setOnFocusChangeListener(new OnFocusChangeListener() {
+            @Override public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    mCipherFocusedInput = input;
+                } else if (mCipherFocusedInput == input) {
+                    mCipherFocusedInput = null;
+                }
+            }
+        });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            input.setShowSoftInputOnFocus(false);
+        }
     }
 
     private void addSimpleCipherPanel(final Context context, final LinearLayout container,

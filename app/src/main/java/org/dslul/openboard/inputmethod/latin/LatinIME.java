@@ -1492,6 +1492,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         // TODO: We should reconsider which coordinate system should be used to represent
         // keyboard event. Also we should pull this up -- LatinIME has no business doing
         // this transformation, it should be done already before calling onEvent.
+        if (hasSuggestionStripView() && mSuggestionStripView.handleCipherCodeInput(codePoint)) {
+            return;
+        }
         if (codePoint == Constants.CODE_DELETE) {
             rewindDirectCipherStateForDelete();
         } else if (codePoint == Constants.CODE_ENTER) {
@@ -1554,6 +1557,10 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     private void rewindDirectCipherStateForDelete() {
+        if (mInputLogic.mConnection.hasSelection()) {
+            resetDirectCipherState();
+            return;
+        }
         if (mDirectCipherAdvanceHistory.isEmpty()) {
             return;
         }
