@@ -113,6 +113,12 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             "pref_affine_a";
     public static final String PREF_AFFINE_B =
             "pref_affine_b";
+    public static final String PREF_RAIL_FENCE_RAILS =
+            "pref_rail_fence_rails";
+    public static final String PREF_COLUMNAR_KEYWORD =
+            "pref_columnar_keyword";
+    public static final String PREF_POLYBIUS_KEYWORD =
+            "pref_polybius_keyword";
     public static final String PREF_DIPLOMATIC_RED_KEYWORD =
             "pref_diplomatic_red_keyword";
     public static final String PREF_PURPLE_PLUGBOARD =

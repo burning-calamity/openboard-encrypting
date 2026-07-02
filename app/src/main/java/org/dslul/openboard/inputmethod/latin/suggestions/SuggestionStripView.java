@@ -71,16 +71,20 @@ import org.dslul.openboard.inputmethod.latin.AudioAndHapticFeedbackManager;
 import org.dslul.openboard.inputmethod.latin.R;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
+import org.dslul.openboard.inputmethod.latin.ciphers.A1Z26Cipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AffineCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AtbashCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.BaconianCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.CaesarCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.ColumnarTranspositionCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.EnigmaCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.DiplomaticRedCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MessageCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MorseCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.PolybiusSquareCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.PurpleCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.QuagmireCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.RailFenceCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.VigenereCipher;
 import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.define.DebugFlags;
@@ -543,6 +547,9 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
     }
 
     private void showCipherDialog() {
+        if (mCipherPopupWindow != null && mCipherPopupWindow.isShowing()) {
+            mCipherPopupWindow.dismiss();
+        }
         final Context context = getContext();
         final SharedPreferences prefs = Settings.getInstance().getSharedPreferences();
 
@@ -647,6 +654,10 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         addSimpleCipherPanel(context, container, R.string.atbash_cipher, new AtbashCipher());
         addVigenerePanel(context, container, prefs);
         addAffinePanel(context, container, prefs);
+        addSimpleCipherPanel(context, container, R.string.a1z26_cipher, new A1Z26Cipher());
+        addRailFencePanel(context, container, prefs);
+        addColumnarTranspositionPanel(context, container, prefs);
+        addPolybiusPanel(context, container, prefs);
         addDiplomaticRedPanel(context, container, prefs);
         addPurplePanel(context, container, prefs);
 
@@ -1020,6 +1031,193 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         } catch (NumberFormatException ignored) {
             return defaultValue;
         }
+    }
+
+
+    private void addRailFencePanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs) {
+        final Button railFenceButton = new Button(context);
+        railFenceButton.setText(R.string.rail_fence_cipher);
+        container.addView(railFenceButton);
+
+        final LinearLayout railFenceSettings = new LinearLayout(context);
+        railFenceSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(railFenceSettings);
+        railFenceSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        railFenceSettings.addView(messageInput);
+
+        final EditText railsInput = new EditText(context);
+        railsInput.setHint(R.string.rail_fence_rails_hint);
+        railsInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        railsInput.setText(String.valueOf(prefs.getInt(Settings.PREF_RAIL_FENCE_RAILS, 3)));
+        styleCipherInput(railsInput);
+        railFenceSettings.addView(railsInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        railFenceSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        railFenceSettings.addView(decryptButton);
+        container.addView(railFenceSettings);
+
+        railFenceButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                railFenceSettings.setVisibility(
+                        railFenceSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputRailFenceText(prefs, messageInput, railsInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputRailFenceText(prefs, messageInput, railsInput, true);
+            }
+        });
+    }
+
+    private void outputRailFenceText(final SharedPreferences prefs, final EditText messageInput,
+            final EditText railsInput, final boolean decrypt) {
+        final int rails = Math.max(2, readInt(railsInput, 3));
+        prefs.edit().putInt(Settings.PREF_RAIL_FENCE_RAILS, rails).apply();
+        final RailFenceCipher cipher = new RailFenceCipher(rails);
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
+    }
+
+    private void addColumnarTranspositionPanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs) {
+        final Button columnarButton = new Button(context);
+        columnarButton.setText(R.string.columnar_transposition_cipher);
+        container.addView(columnarButton);
+
+        final LinearLayout columnarSettings = new LinearLayout(context);
+        columnarSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(columnarSettings);
+        columnarSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        columnarSettings.addView(messageInput);
+
+        final EditText keywordInput = new EditText(context);
+        keywordInput.setHint(R.string.cipher_keyword_hint);
+        keywordInput.setText(prefs.getString(Settings.PREF_COLUMNAR_KEYWORD, "COLUMN"));
+        styleCipherInput(keywordInput);
+        columnarSettings.addView(keywordInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        columnarSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        columnarSettings.addView(decryptButton);
+        container.addView(columnarSettings);
+
+        columnarButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                columnarSettings.setVisibility(
+                        columnarSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputColumnarTranspositionText(prefs, messageInput, keywordInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputColumnarTranspositionText(prefs, messageInput, keywordInput, true);
+            }
+        });
+    }
+
+    private void outputColumnarTranspositionText(final SharedPreferences prefs,
+            final EditText messageInput, final EditText keywordInput, final boolean decrypt) {
+        prefs.edit().putString(Settings.PREF_COLUMNAR_KEYWORD,
+                keywordInput.getText().toString()).apply();
+        final ColumnarTranspositionCipher cipher =
+                new ColumnarTranspositionCipher(keywordInput.getText().toString());
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
+    }
+
+    private void addPolybiusPanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs) {
+        final Button polybiusButton = new Button(context);
+        polybiusButton.setText(R.string.polybius_square_cipher);
+        container.addView(polybiusButton);
+
+        final LinearLayout polybiusSettings = new LinearLayout(context);
+        polybiusSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(polybiusSettings);
+        polybiusSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        polybiusSettings.addView(messageInput);
+
+        final EditText keywordInput = new EditText(context);
+        keywordInput.setHint(R.string.polybius_keyword_hint);
+        keywordInput.setText(prefs.getString(Settings.PREF_POLYBIUS_KEYWORD, ""));
+        styleCipherInput(keywordInput);
+        polybiusSettings.addView(keywordInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        polybiusSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        polybiusSettings.addView(decryptButton);
+        container.addView(polybiusSettings);
+
+        polybiusButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                polybiusSettings.setVisibility(
+                        polybiusSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputPolybiusText(prefs, messageInput, keywordInput, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputPolybiusText(prefs, messageInput, keywordInput, true);
+            }
+        });
+    }
+
+    private void outputPolybiusText(final SharedPreferences prefs, final EditText messageInput,
+            final EditText keywordInput, final boolean decrypt) {
+        prefs.edit().putString(Settings.PREF_POLYBIUS_KEYWORD,
+                keywordInput.getText().toString()).apply();
+        final PolybiusSquareCipher cipher =
+                new PolybiusSquareCipher(keywordInput.getText().toString());
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
     }
 
 

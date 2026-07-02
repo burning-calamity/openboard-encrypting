@@ -219,6 +219,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     private AlertDialog mOptionsDialog;
     private int mDirectCipherPosition;
+    private int mDirectCipherExpectedCursorPosition = -1;
     private String mDirectCipherMode;
     private final ArrayList<Boolean> mDirectCipherAdvanceHistory = new ArrayList<>();
 
@@ -1502,9 +1503,15 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         }
         final int keyX = mainKeyboardView.getKeyX(x);
         final int keyY = mainKeyboardView.getKeyY(y);
+        final int directCipherCursorBeforeInput =
+                mInputLogic.mConnection.getExpectedSelectionStart();
         final String directCipherText = getDirectCipherText(codePoint);
         if (directCipherText != null) {
             onTextInput(directCipherText);
+            if (directCipherCursorBeforeInput >= 0) {
+                mDirectCipherExpectedCursorPosition = directCipherCursorBeforeInput
+                        + directCipherText.length();
+            }
             return;
         }
         final Event event = createSoftwareKeypressEvent(
@@ -1549,6 +1556,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     private void resetDirectCipherState() {
         mDirectCipherPosition = 0;
+        mDirectCipherExpectedCursorPosition = -1;
         mDirectCipherAdvanceHistory.clear();
     }
 
@@ -1561,6 +1569,12 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             resetDirectCipherState();
             return;
         }
+        final int cursorPosition = mInputLogic.mConnection.getExpectedSelectionStart();
+        if (mDirectCipherExpectedCursorPosition >= 0
+                && cursorPosition != mDirectCipherExpectedCursorPosition) {
+            resetDirectCipherState();
+            return;
+        }
         if (mDirectCipherAdvanceHistory.isEmpty()) {
             return;
         }
@@ -1568,6 +1582,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 mDirectCipherAdvanceHistory.size() - 1);
         if (advanced) {
             mDirectCipherPosition = Math.max(0, mDirectCipherPosition - 1);
+        }
+        if (cursorPosition >= 0) {
+            mDirectCipherExpectedCursorPosition = Math.max(0, cursorPosition - 1);
         }
     }
 
