@@ -218,6 +218,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     private AlertDialog mOptionsDialog;
     private int mDirectCipherPosition;
+    private String mDirectCipherMode;
 
     private final boolean mIsHardwareAcceleratedDrawingEnabled;
 
@@ -891,6 +892,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     void onStartInputInternal(final EditorInfo editorInfo, final boolean restarting) {
         super.onStartInput(editorInfo, restarting);
+        mDirectCipherPosition = 0;
 
         // If the primary hint language does not match the current subtype language, then try
         // to switch to the primary hint language.
@@ -1094,6 +1096,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     void onFinishInputInternal() {
         super.onFinishInput();
+        mDirectCipherPosition = 0;
 
         mDictionaryFacilitator.onFinishInput(this);
         final MainKeyboardView mainKeyboardView = mKeyboardSwitcher.getMainKeyboardView();
@@ -1487,6 +1490,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         // TODO: We should reconsider which coordinate system should be used to represent
         // keyboard event. Also we should pull this up -- LatinIME has no business doing
         // this transformation, it should be done already before calling onEvent.
+        if (codePoint == Constants.CODE_DELETE || codePoint == Constants.CODE_ENTER) {
+            mDirectCipherPosition = 0;
+        }
         final int keyX = mainKeyboardView.getKeyX(x);
         final int keyY = mainKeyboardView.getKeyY(y);
         final String directCipherText = getDirectCipherText(codePoint);
@@ -1500,7 +1506,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     private String getDirectCipherText(final int codePoint) {
-        if (codePoint <= 0 || !Character.isLetterOrDigit(codePoint)) {
+        if (codePoint <= 0) {
             return null;
         }
         if (!Settings.getInstance().getSharedPreferences()
@@ -1508,9 +1514,19 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             mDirectCipherPosition = 0;
             return null;
         }
-        final String input = String.valueOf((char)codePoint);
         final String mode = Settings.getInstance().getSharedPreferences()
                 .getString(Settings.PREF_CIPHER_DIRECT_MODE, Settings.CIPHER_MODE_CAESAR);
+        if (!mode.equals(mDirectCipherMode)) {
+            mDirectCipherPosition = 0;
+            mDirectCipherMode = mode;
+        }
+        if (codePoint == Constants.CODE_SPACE && Settings.CIPHER_MODE_MORSE.equals(mode)) {
+            return " / ";
+        }
+        if (!Character.isLetterOrDigit(codePoint)) {
+            return null;
+        }
+        final String input = String.valueOf((char)codePoint);
         final String output = transformDirectCipherInput(mode, input);
         if (Character.isLetter(codePoint)) {
             mDirectCipherPosition++;
@@ -1529,7 +1545,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             return new BaconianCipher().encrypt(input);
         }
         if (Settings.CIPHER_MODE_MORSE.equals(mode)) {
-            return new MorseCipher().encrypt(input);
+            return new MorseCipher().encrypt(input) + " ";
         }
         if (Settings.CIPHER_MODE_QUAGMIRE_I.equals(mode)) {
             return transformStatefulDirectCipher(createDirectQuagmireCipher(
