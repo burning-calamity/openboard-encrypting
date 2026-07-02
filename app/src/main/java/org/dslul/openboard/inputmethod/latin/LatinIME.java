@@ -220,6 +220,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     private AlertDialog mOptionsDialog;
     private int mDirectCipherPosition;
     private String mDirectCipherMode;
+    private final ArrayList<Boolean> mDirectCipherAdvanceHistory = new ArrayList<>();
 
     private final boolean mIsHardwareAcceleratedDrawingEnabled;
 
@@ -893,7 +894,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     void onStartInputInternal(final EditorInfo editorInfo, final boolean restarting) {
         super.onStartInput(editorInfo, restarting);
-        mDirectCipherPosition = 0;
+        resetDirectCipherState();
 
         // If the primary hint language does not match the current subtype language, then try
         // to switch to the primary hint language.
@@ -1097,7 +1098,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     void onFinishInputInternal() {
         super.onFinishInput();
-        mDirectCipherPosition = 0;
+        resetDirectCipherState();
 
         mDictionaryFacilitator.onFinishInput(this);
         final MainKeyboardView mainKeyboardView = mKeyboardSwitcher.getMainKeyboardView();
@@ -1492,9 +1493,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         // keyboard event. Also we should pull this up -- LatinIME has no business doing
         // this transformation, it should be done already before calling onEvent.
         if (codePoint == Constants.CODE_DELETE) {
-            mDirectCipherPosition = Math.max(0, mDirectCipherPosition - 1);
+            rewindDirectCipherStateForDelete();
         } else if (codePoint == Constants.CODE_ENTER) {
-            mDirectCipherPosition = 0;
+            resetDirectCipherState();
         }
         final int keyX = mainKeyboardView.getKeyX(x);
         final int keyY = mainKeyboardView.getKeyY(y);
@@ -1514,27 +1515,53 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         }
         if (!Settings.getInstance().getSharedPreferences()
                 .getBoolean(Settings.PREF_CIPHER_DIRECT_INPUT, false)) {
-            mDirectCipherPosition = 0;
+            resetDirectCipherState();
             return null;
         }
         final String mode = Settings.getInstance().getSharedPreferences()
                 .getString(Settings.PREF_CIPHER_DIRECT_MODE, Settings.CIPHER_MODE_CAESAR);
         if (!mode.equals(mDirectCipherMode)) {
-            mDirectCipherPosition = 0;
+            resetDirectCipherState();
             mDirectCipherMode = mode;
         }
-        if (codePoint == Constants.CODE_SPACE && Settings.CIPHER_MODE_MORSE.equals(mode)) {
+        if (codePoint == Constants.CODE_SPACE
+                && (Settings.CIPHER_MODE_MORSE.equals(mode)
+                        || Settings.CIPHER_MODE_BACONIAN.equals(mode))) {
+            recordDirectCipherAdvance(false);
             return " / ";
         }
         if (!isDirectCipherConsumedCodePoint(mode, codePoint)) {
+            recordDirectCipherAdvance(false);
             return null;
         }
         final String input = String.valueOf((char)codePoint);
         final String output = transformDirectCipherInput(mode, input);
-        if (shouldAdvanceDirectCipherPosition(mode, codePoint)) {
+        final boolean advancePosition = shouldAdvanceDirectCipherPosition(mode, codePoint);
+        if (advancePosition) {
             mDirectCipherPosition++;
         }
+        recordDirectCipherAdvance(advancePosition);
         return output;
+    }
+
+    private void resetDirectCipherState() {
+        mDirectCipherPosition = 0;
+        mDirectCipherAdvanceHistory.clear();
+    }
+
+    private void recordDirectCipherAdvance(final boolean advanced) {
+        mDirectCipherAdvanceHistory.add(advanced);
+    }
+
+    private void rewindDirectCipherStateForDelete() {
+        if (mDirectCipherAdvanceHistory.isEmpty()) {
+            return;
+        }
+        final boolean advanced = mDirectCipherAdvanceHistory.remove(
+                mDirectCipherAdvanceHistory.size() - 1);
+        if (advanced) {
+            mDirectCipherPosition = Math.max(0, mDirectCipherPosition - 1);
+        }
     }
 
     private boolean isDirectCipherConsumedCodePoint(final String mode, final int codePoint) {
@@ -1570,7 +1597,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             return transformStatefulDirectCipher(createDirectEnigmaM4Cipher(), input);
         }
         if (Settings.CIPHER_MODE_BACONIAN.equals(mode)) {
-            return new BaconianCipher().encrypt(input);
+            return new BaconianCipher().encrypt(input) + " ";
         }
         if (Settings.CIPHER_MODE_MORSE.equals(mode)) {
             return new MorseCipher().encrypt(input) + " ";

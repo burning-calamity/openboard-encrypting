@@ -42,6 +42,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.ViewParent;
 import android.view.Window;
 import android.view.WindowManager;
@@ -644,7 +645,9 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         final PopupWindow popupWindow = new PopupWindow(scrollView,
                 ViewGroup.LayoutParams.MATCH_PARENT, popupHeight, true);
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        popupWindow.setOutsideTouchable(true);
+        popupWindow.setOutsideTouchable(false);
+        popupWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+        popupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
         closeButton.setOnClickListener(new OnClickListener() {
             @Override public void onClick(View v) {
                 popupWindow.dismiss();
