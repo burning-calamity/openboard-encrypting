@@ -24,8 +24,8 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.IBinder;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -35,6 +35,7 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -49,6 +50,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -505,6 +507,10 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
                 getResources().getDisplayMetrics());
         container.setPadding(padding, padding / 2, padding, 0);
 
+        final Button closeButton = new Button(context);
+        closeButton.setText(R.string.close);
+        container.addView(closeButton);
+
         final Button caesarButton = new Button(context);
         caesarButton.setText(R.string.caesar_cipher);
         container.addView(caesarButton);
@@ -567,22 +573,18 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
             }
         });
 
-        final AlertDialog dialog = new AlertDialog.Builder(
-                DialogUtils.getPlatformDialogThemeContext(context))
-                .setTitle(R.string.cipher_tools_title)
-                .setView(scrollView)
-                .setNegativeButton(R.string.close, null)
-                .create();
-        final IBinder windowToken = getWindowToken();
-        if (windowToken == null) {
-            return;
-        }
-        final Window window = dialog.getWindow();
-        final WindowManager.LayoutParams lp = window.getAttributes();
-        lp.token = windowToken;
-        lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;
-        window.setAttributes(lp);
-        dialog.show();
+        final int popupHeight = getRootView() == null ? ViewGroup.LayoutParams.WRAP_CONTENT
+                : getRootView().getHeight();
+        final PopupWindow popupWindow = new PopupWindow(scrollView,
+                ViewGroup.LayoutParams.MATCH_PARENT, popupHeight, true);
+        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setOutsideTouchable(true);
+        closeButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                popupWindow.dismiss();
+            }
+        });
+        popupWindow.showAtLocation(this, Gravity.BOTTOM, 0, 0);
     }
 
 
