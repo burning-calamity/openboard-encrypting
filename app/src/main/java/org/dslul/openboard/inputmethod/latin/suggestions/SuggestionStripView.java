@@ -25,6 +25,10 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.IBinder;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.text.Editable;
 import android.text.InputType;
@@ -38,6 +42,8 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Button;
 import android.widget.EditText;
@@ -66,6 +72,7 @@ import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.define.DebugFlags;
 import org.dslul.openboard.inputmethod.latin.settings.Settings;
 import org.dslul.openboard.inputmethod.latin.settings.SettingsValues;
+import org.dslul.openboard.inputmethod.latin.utils.DialogUtils;
 import org.dslul.openboard.inputmethod.latin.suggestions.MoreSuggestionsView.MoreSuggestionsListener;
 
 import java.util.ArrayList;
@@ -560,11 +567,23 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
             }
         });
 
-        new AlertDialog.Builder(context)
+        final AlertDialog dialog = new AlertDialog.Builder(
+                DialogUtils.getPlatformDialogThemeContext(context))
                 .setTitle(R.string.cipher_tools_title)
                 .setView(scrollView)
                 .setNegativeButton(R.string.close, null)
-                .show();
+                .create();
+        final IBinder windowToken = getWindowToken();
+        if (windowToken == null) {
+            return;
+        }
+        final Window window = dialog.getWindow();
+        final WindowManager.LayoutParams lp = window.getAttributes();
+        lp.token = windowToken;
+        lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;
+        window.setAttributes(lp);
+        window.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        dialog.show();
     }
 
 
