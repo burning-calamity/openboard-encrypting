@@ -221,7 +221,16 @@ public final class EnigmaCipher implements MessageCipher {
         }
 
         boolean atNotch() {
-            return stepping && spec.notches.indexOf(ALPHABET.charAt(position)) >= 0;
+            if (!stepping) {
+                return false;
+            }
+            for (int i = 0; i < spec.notches.length(); i++) {
+                final int notch = ALPHABET.indexOf(spec.notches.charAt(i));
+                if (position == positiveMod(notch - ring)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         int forward(final int value) {

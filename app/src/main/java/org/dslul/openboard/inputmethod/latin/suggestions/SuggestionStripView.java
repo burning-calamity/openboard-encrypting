@@ -582,7 +582,6 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         lp.token = windowToken;
         lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;
         window.setAttributes(lp);
-        window.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         dialog.show();
     }
 
