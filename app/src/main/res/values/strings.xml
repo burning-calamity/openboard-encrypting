@@ -208,15 +208,9 @@
     <string name="affine_cipher">Affine cipher</string>
     <string name="diplomatic_red_cipher">Diplomatic Red</string>
     <string name="purple_cipher">Purple</string>
-    <string name="a1z26_cipher">A1Z26</string>
-    <string name="rail_fence_cipher">Rail fence</string>
-    <string name="columnar_transposition_cipher">Columnar transposition</string>
-    <string name="polybius_square_cipher">Polybius square</string>
     <string name="cipher_keyword_hint">Keyword</string>
     <string name="affine_a_hint">A multiplier (coprime with 26)</string>
     <string name="affine_b_hint">B shift</string>
-    <string name="rail_fence_rails_hint">Rails</string>
-    <string name="polybius_keyword_hint">Polybius keyword (I/J share a cell)</string>
     <string name="purple_position_hint">Purple switch start (0-2)</string>
     <string-array name="cipher_direct_mode_labels">
         <item>@string/caesar_cipher</item>
