@@ -89,6 +89,19 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             "pref_show_cipher_key";
     public static final String PREF_CAESAR_CIPHER_SHIFT =
             "pref_caesar_cipher_shift";
+    public static final String PREF_CIPHER_DIRECT_INPUT =
+            "pref_cipher_direct_input";
+    public static final String PREF_CIPHER_DIRECT_MODE =
+            "pref_cipher_direct_mode";
+    public static final String CIPHER_MODE_CAESAR = "caesar";
+    public static final String CIPHER_MODE_ENIGMA_M3 = "enigma_m3";
+    public static final String CIPHER_MODE_ENIGMA_M4 = "enigma_m4";
+    public static final String CIPHER_MODE_BACONIAN = "baconian";
+    public static final String CIPHER_MODE_MORSE = "morse";
+    public static final String CIPHER_MODE_QUAGMIRE_I = "quagmire_i";
+    public static final String CIPHER_MODE_QUAGMIRE_II = "quagmire_ii";
+    public static final String CIPHER_MODE_QUAGMIRE_III = "quagmire_iii";
+    public static final String CIPHER_MODE_QUAGMIRE_IV = "quagmire_iv";
     public static final String PREF_ENIGMA_M3_ROTORS =
             "pref_enigma_m3_rotors";
     public static final String PREF_ENIGMA_M3_REFLECTOR =

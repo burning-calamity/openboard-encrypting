@@ -178,6 +178,8 @@
     <string name="cipher_key_label" translatable="false">🔐</string>
     <string name="open_cipher_tools">Open cipher tools</string>
     <string name="cipher_tools_title">Cipher tools</string>
+    <string name="cipher_direct_input">Encrypt typed letters directly</string>
+    <string name="cipher_direct_mode">Direct typing cipher</string>
     <string name="cipher_message_hint">Message</string>
     <string name="caesar_cipher">Caesar cipher</string>
     <string name="caesar_shift">Shift</string>
@@ -201,6 +203,28 @@
     <string name="quagmire_plain_keyword_hint">Plain alphabet keyword</string>
     <string name="quagmire_cipher_keyword_hint">Cipher alphabet keyword</string>
     <string name="quagmire_indicator_keyword_hint">Indicator keyword</string>
+    <string-array name="cipher_direct_mode_labels">
+        <item>@string/caesar_cipher</item>
+        <item>@string/enigma_m3</item>
+        <item>@string/enigma_m4</item>
+        <item>@string/baconian_cipher</item>
+        <item>@string/morse_code</item>
+        <item>@string/quagmire_i</item>
+        <item>@string/quagmire_ii</item>
+        <item>@string/quagmire_iii</item>
+        <item>@string/quagmire_iv</item>
+    </string-array>
+    <string-array name="cipher_direct_mode_values" translatable="false">
+        <item>caesar</item>
+        <item>enigma_m3</item>
+        <item>enigma_m4</item>
+        <item>baconian</item>
+        <item>morse</item>
+        <item>quagmire_i</item>
+        <item>quagmire_ii</item>
+        <item>quagmire_iii</item>
+        <item>quagmire_iv</item>
+    </string-array>
     <!-- Preferences item for enabling clipboard history -->
     <string name="enable_clipboard_history">Enable clipboard history</string>
     <!-- Description for enabling/disabling clipboard history mentioning that if disabled, clipboard content is pasted -->

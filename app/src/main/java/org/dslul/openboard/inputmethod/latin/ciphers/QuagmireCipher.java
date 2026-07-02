@@ -14,7 +14,7 @@ public final class QuagmireCipher implements MessageCipher {
 
     public QuagmireCipher(final Variant variant, final String plainKeyword,
             final String cipherKeyword, final String indicatorKeyword) {
-        mPlainAlphabet = variant == Variant.I || variant == Variant.III
+        mPlainAlphabet = variant == Variant.I || variant == Variant.III || variant == Variant.IV
                 ? keyedAlphabet(plainKeyword) : ALPHABET;
         mCipherAlphabet = variant == Variant.II || variant == Variant.III || variant == Variant.IV
                 ? keyedAlphabet(cipherKeyword) : ALPHABET;

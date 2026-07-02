@@ -46,13 +46,17 @@ import android.view.ViewParent;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.dslul.openboard.inputmethod.accessibility.AccessibilityUtils;
@@ -511,6 +515,51 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         closeButton.setText(R.string.close);
         container.addView(closeButton);
 
+        final CheckBox directInputToggle = new CheckBox(context);
+        directInputToggle.setText(R.string.cipher_direct_input);
+        directInputToggle.setChecked(prefs.getBoolean(Settings.PREF_CIPHER_DIRECT_INPUT, false));
+        directInputToggle.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                prefs.edit().putBoolean(Settings.PREF_CIPHER_DIRECT_INPUT,
+                        directInputToggle.isChecked()).apply();
+            }
+        });
+        container.addView(directInputToggle);
+
+        final TextView directModeLabel = new TextView(context, null, R.attr.suggestionWordStyle);
+        directModeLabel.setText(R.string.cipher_direct_mode);
+        container.addView(directModeLabel);
+
+        final Spinner directModeSpinner = new Spinner(context);
+        final String[] directModeLabels = getResources().getStringArray(
+                R.array.cipher_direct_mode_labels);
+        final ArrayAdapter<String> directModeAdapter = new ArrayAdapter<>(context,
+                android.R.layout.simple_spinner_item, directModeLabels);
+        directModeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        directModeSpinner.setAdapter(directModeAdapter);
+        final String[] directModeValues = getResources().getStringArray(
+                R.array.cipher_direct_mode_values);
+        final String currentMode = prefs.getString(Settings.PREF_CIPHER_DIRECT_MODE,
+                Settings.CIPHER_MODE_CAESAR);
+        for (int i = 0; i < directModeValues.length; i++) {
+            if (directModeValues[i].equals(currentMode)) {
+                directModeSpinner.setSelection(i);
+                break;
+            }
+        }
+        directModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                prefs.edit().putString(Settings.PREF_CIPHER_DIRECT_MODE,
+                        directModeValues[position]).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        container.addView(directModeSpinner);
+
         final Button caesarButton = new Button(context);
         caesarButton.setText(R.string.caesar_cipher);
         container.addView(caesarButton);
@@ -523,6 +572,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         messageInput.setHint(R.string.cipher_message_hint);
         messageInput.setMinLines(3);
         messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        prefillMessageInput(messageInput);
         caesarSettings.addView(messageInput);
 
         final EditText shiftInput = new EditText(context);
@@ -573,8 +623,11 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
             }
         });
 
-        final int popupHeight = getRootView() == null ? ViewGroup.LayoutParams.WRAP_CONTENT
-                : getRootView().getHeight();
+        final int rootHeight = getRootView() == null ? 0 : getRootView().getHeight();
+        final int maxPopupHeight = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                360, getResources().getDisplayMetrics());
+        final int popupHeight = rootHeight <= 0 ? ViewGroup.LayoutParams.WRAP_CONTENT
+                : Math.min(maxPopupHeight, Math.max(getHeight(), rootHeight / 2));
         final PopupWindow popupWindow = new PopupWindow(scrollView,
                 ViewGroup.LayoutParams.MATCH_PARENT, popupHeight, true);
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -584,10 +637,20 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
                 popupWindow.dismiss();
             }
         });
-        popupWindow.showAtLocation(this, Gravity.BOTTOM, 0, 0);
+        popupWindow.showAsDropDown(this, 0, -getHeight() - popupHeight);
     }
 
 
+
+    private void prefillMessageInput(final EditText messageInput) {
+        if (mListener == null) {
+            return;
+        }
+        final CharSequence selectedText = mListener.getSelection();
+        if (selectedText != null && selectedText.length() > 0) {
+            messageInput.setText(selectedText);
+        }
+    }
 
     private void addSimpleCipherPanel(final Context context, final LinearLayout container,
             final int titleResId, final MessageCipher cipher) {
@@ -603,6 +666,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         messageInput.setHint(R.string.cipher_message_hint);
         messageInput.setMinLines(3);
         messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        prefillMessageInput(messageInput);
         cipherSettings.addView(messageInput);
 
         final Button encryptButton = new Button(context);
@@ -646,6 +710,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         messageInput.setHint(R.string.cipher_message_hint);
         messageInput.setMinLines(3);
         messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        prefillMessageInput(messageInput);
         quagmireSettings.addView(messageInput);
 
         final EditText plainKeywordInput = new EditText(context);
@@ -731,6 +796,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         messageInput.setHint(R.string.cipher_message_hint);
         messageInput.setMinLines(3);
         messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        prefillMessageInput(messageInput);
         enigmaSettings.addView(messageInput);
 
         final EditText thinRotorInput = new EditText(context);
