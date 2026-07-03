@@ -65,18 +65,31 @@ import org.dslul.openboard.inputmethod.keyboard.KeyboardSwitcher;
 import org.dslul.openboard.inputmethod.keyboard.MainKeyboardView;
 import org.dslul.openboard.inputmethod.latin.Suggest.OnGetSuggestedWordsCallback;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
+import org.dslul.openboard.inputmethod.latin.ciphers.A1Z26Cipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AffineCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AtbashCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.AutokeyCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.BeaufortCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.BifidCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.BaconianCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.CaesarCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.ColumnarTranspositionCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.EnigmaCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.GronsfeldCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.DiplomaticRedCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MessageCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MorseCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.PlayfairCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.PolybiusSquareCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.PositionedMessageCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.PurpleCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.QuagmireCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.RailFenceCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.Rot47Cipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.ScytaleCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.TrithemiusCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.VigenereCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.ZalgoCipher;
 import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.common.CoordinateUtils;
 import org.dslul.openboard.inputmethod.latin.common.InputPointers;
@@ -1592,6 +1605,12 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (Settings.CIPHER_MODE_MORSE.equals(mode)) {
             return isAsciiLetter(codePoint) || (codePoint >= '0' && codePoint <= '9');
         }
+        if (Settings.CIPHER_MODE_ROT47.equals(mode)) {
+            return codePoint >= '!' && codePoint <= '~';
+        }
+        if (Settings.CIPHER_MODE_ZALGO.equals(mode)) {
+            return codePoint > 0 && !Character.isWhitespace(codePoint);
+        }
         return isAsciiLetter(codePoint);
     }
 
@@ -1606,7 +1625,11 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 || Settings.CIPHER_MODE_QUAGMIRE_II.equals(mode)
                 || Settings.CIPHER_MODE_QUAGMIRE_III.equals(mode)
                 || Settings.CIPHER_MODE_QUAGMIRE_IV.equals(mode)
-                || Settings.CIPHER_MODE_PURPLE.equals(mode);
+                || Settings.CIPHER_MODE_PURPLE.equals(mode)
+                || Settings.CIPHER_MODE_AUTOKEY.equals(mode)
+                || Settings.CIPHER_MODE_BEAUFORT.equals(mode)
+                || Settings.CIPHER_MODE_GRONSFELD.equals(mode)
+                || Settings.CIPHER_MODE_TRITHEMIUS.equals(mode);
     }
 
     private static boolean isAsciiLetter(final int codePoint) {
@@ -1656,9 +1679,64 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                     Settings.getInstance().getSharedPreferences().getInt(Settings.PREF_AFFINE_B, 8))
                     .encrypt(input);
         }
+        if (Settings.CIPHER_MODE_A1Z26.equals(mode)) {
+            return new A1Z26Cipher().encrypt(input) + " ";
+        }
+        if (Settings.CIPHER_MODE_RAIL_FENCE.equals(mode)) {
+            return new RailFenceCipher(Settings.getInstance().getSharedPreferences()
+                    .getInt(Settings.PREF_RAIL_FENCE_RAILS, 3)).encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_COLUMNAR.equals(mode)) {
+            return new ColumnarTranspositionCipher(Settings.getInstance().getSharedPreferences()
+                    .getString(Settings.PREF_COLUMNAR_KEYWORD, "COLUMN")).encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_POLYBIUS.equals(mode)) {
+            return new PolybiusSquareCipher(Settings.getInstance().getSharedPreferences()
+                    .getString(Settings.PREF_POLYBIUS_KEYWORD, "")).encrypt(input) + " ";
+        }
+        if (Settings.CIPHER_MODE_AUTOKEY.equals(mode)) {
+            return transformStatefulDirectCipher(new AutokeyCipher(Settings.getInstance()
+                    .getSharedPreferences().getString(Settings.PREF_AUTOKEY_KEYWORD, "QUEENLY")),
+                    input);
+        }
+        if (Settings.CIPHER_MODE_BEAUFORT.equals(mode)) {
+            return transformStatefulDirectCipher(new BeaufortCipher(Settings.getInstance()
+                    .getSharedPreferences().getString(Settings.PREF_BEAUFORT_KEYWORD, "FORT")),
+                    input);
+        }
+        if (Settings.CIPHER_MODE_GRONSFELD.equals(mode)) {
+            return transformStatefulDirectCipher(new GronsfeldCipher(Settings.getInstance()
+                    .getSharedPreferences().getString(Settings.PREF_GRONSFELD_KEY, "31415")),
+                    input);
+        }
+        if (Settings.CIPHER_MODE_SCYTALE.equals(mode)) {
+            return new ScytaleCipher(Math.max(2, readInt(Settings.getInstance()
+                    .getSharedPreferences().getString(Settings.PREF_SCYTALE_COLUMNS, "4"), 4)))
+                    .encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_ROT47.equals(mode)) {
+            return new Rot47Cipher().encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_TRITHEMIUS.equals(mode)) {
+            return transformStatefulDirectCipher(new TrithemiusCipher(), input);
+        }
+        if (Settings.CIPHER_MODE_PLAYFAIR.equals(mode)) {
+            return new PlayfairCipher(Settings.getInstance().getSharedPreferences()
+                    .getString(Settings.PREF_PLAYFAIR_KEYWORD, "PLAYFAIR")).encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_BIFID.equals(mode)) {
+            return new BifidCipher(Settings.getInstance().getSharedPreferences()
+                    .getString(Settings.PREF_BIFID_KEYWORD, "BIFID")).encrypt(input);
+        }
+        if (Settings.CIPHER_MODE_ZALGO.equals(mode)) {
+            return new ZalgoCipher(Math.max(0, readInt(Settings.getInstance()
+                    .getSharedPreferences().getString(Settings.PREF_ZALGO_INTENSITY, "9"), 9)))
+                    .encrypt(input);
+        }
         if (Settings.CIPHER_MODE_DIPLOMATIC_RED.equals(mode)) {
-            return new DiplomaticRedCipher(Settings.getInstance().getSharedPreferences().getString(
-                    Settings.PREF_DIPLOMATIC_RED_KEYWORD, "DIPLOMATICRED")).encrypt(input);
+            return new DiplomaticRedCipher(Settings.getInstance().getSharedPreferences()
+                    .getString(Settings.PREF_DIPLOMATIC_RED_KEYWORD, "DIPLOMATICRED"))
+                    .encrypt(input);
         }
         if (Settings.CIPHER_MODE_PURPLE.equals(mode)) {
             return transformStatefulDirectCipher(new PurpleCipher(
@@ -1670,6 +1748,14 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         final int shift = Settings.getInstance().getSharedPreferences()
                 .getInt(Settings.PREF_CAESAR_CIPHER_SHIFT, 3);
         return new CaesarCipher(shift).encrypt(input);
+    }
+
+    private int readInt(final String input, final int defaultValue) {
+        try {
+            return Integer.parseInt(input);
+        } catch (NumberFormatException ignored) {
+            return defaultValue;
+        }
     }
 
     private String transformStatefulDirectCipher(final MessageCipher cipher, final String input) {

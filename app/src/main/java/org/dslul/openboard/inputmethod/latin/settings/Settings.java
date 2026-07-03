@@ -107,6 +107,19 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String CIPHER_MODE_AFFINE = "affine";
     public static final String CIPHER_MODE_DIPLOMATIC_RED = "diplomatic_red";
     public static final String CIPHER_MODE_PURPLE = "purple";
+    public static final String CIPHER_MODE_A1Z26 = "a1z26";
+    public static final String CIPHER_MODE_RAIL_FENCE = "rail_fence";
+    public static final String CIPHER_MODE_COLUMNAR = "columnar";
+    public static final String CIPHER_MODE_POLYBIUS = "polybius";
+    public static final String CIPHER_MODE_AUTOKEY = "autokey";
+    public static final String CIPHER_MODE_BEAUFORT = "beaufort";
+    public static final String CIPHER_MODE_GRONSFELD = "gronsfeld";
+    public static final String CIPHER_MODE_SCYTALE = "scytale";
+    public static final String CIPHER_MODE_ROT47 = "rot47";
+    public static final String CIPHER_MODE_TRITHEMIUS = "trithemius";
+    public static final String CIPHER_MODE_PLAYFAIR = "playfair";
+    public static final String CIPHER_MODE_BIFID = "bifid";
+    public static final String CIPHER_MODE_ZALGO = "zalgo";
     public static final String PREF_VIGENERE_KEYWORD =
             "pref_vigenere_keyword";
     public static final String PREF_AFFINE_A =
