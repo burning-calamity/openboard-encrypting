@@ -74,18 +74,27 @@ import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
 import org.dslul.openboard.inputmethod.latin.ciphers.A1Z26Cipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AffineCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AtbashCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.AutokeyCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.BeaufortCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.BifidCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.BaconianCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.CaesarCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.ColumnarTranspositionCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.GronsfeldCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.EnigmaCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.DiplomaticRedCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MessageCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.MorseCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.PlayfairCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.PolybiusSquareCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.PurpleCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.QuagmireCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.RailFenceCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.ScytaleCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.Rot47Cipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.TrithemiusCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.VigenereCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.ZalgoCipher;
 import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.define.DebugFlags;
 import org.dslul.openboard.inputmethod.latin.settings.Settings;
@@ -658,6 +667,59 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         addRailFencePanel(context, container, prefs);
         addColumnarTranspositionPanel(context, container, prefs);
         addPolybiusPanel(context, container, prefs);
+        addParameterizedCipherPanel(context, container, prefs, R.string.autokey_cipher,
+                R.string.cipher_keyword_hint, Settings.PREF_AUTOKEY_KEYWORD, "QUEENLY",
+                InputType.TYPE_CLASS_TEXT, new ParameterCipherFactory() {
+                    @Override public MessageCipher create(String parameter) {
+                        return new AutokeyCipher(parameter);
+                    }
+                });
+        addParameterizedCipherPanel(context, container, prefs, R.string.beaufort_cipher,
+                R.string.cipher_keyword_hint, Settings.PREF_BEAUFORT_KEYWORD, "FORT",
+                InputType.TYPE_CLASS_TEXT, new ParameterCipherFactory() {
+                    @Override public MessageCipher create(String parameter) {
+                        return new BeaufortCipher(parameter);
+                    }
+                });
+        addParameterizedCipherPanel(context, container, prefs, R.string.gronsfeld_cipher,
+                R.string.gronsfeld_key_hint, Settings.PREF_GRONSFELD_KEY, "31415",
+                InputType.TYPE_CLASS_NUMBER, new ParameterCipherFactory() {
+                    @Override public MessageCipher create(String parameter) {
+                        return new GronsfeldCipher(parameter);
+                    }
+                });
+        addParameterizedCipherPanel(context, container, prefs, R.string.scytale_cipher,
+                R.string.scytale_columns_hint, Settings.PREF_SCYTALE_COLUMNS, "4",
+                InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED,
+                new ParameterCipherFactory() {
+                    @Override public MessageCipher create(String parameter) {
+                        return new ScytaleCipher(Math.max(2, readInt(parameter, 4)));
+                    }
+                });
+        addSimpleCipherPanel(context, container, R.string.rot47_cipher, new Rot47Cipher());
+        addSimpleCipherPanel(context, container, R.string.trithemius_cipher,
+                new TrithemiusCipher());
+        addParameterizedCipherPanel(context, container, prefs, R.string.playfair_cipher,
+                R.string.cipher_keyword_hint, Settings.PREF_PLAYFAIR_KEYWORD, "PLAYFAIR",
+                InputType.TYPE_CLASS_TEXT, new ParameterCipherFactory() {
+                    @Override public MessageCipher create(String parameter) {
+                        return new PlayfairCipher(parameter);
+                    }
+                });
+        addParameterizedCipherPanel(context, container, prefs, R.string.bifid_cipher,
+                R.string.cipher_keyword_hint, Settings.PREF_BIFID_KEYWORD, "BIFID",
+                InputType.TYPE_CLASS_TEXT, new ParameterCipherFactory() {
+                    @Override public MessageCipher create(String parameter) {
+                        return new BifidCipher(parameter);
+                    }
+                });
+        addParameterizedCipherPanel(context, container, prefs, R.string.zalgo_cipher,
+                R.string.zalgo_intensity_hint, Settings.PREF_ZALGO_INTENSITY, "9",
+                InputType.TYPE_CLASS_NUMBER, new ParameterCipherFactory() {
+                    @Override public MessageCipher create(String parameter) {
+                        return new ZalgoCipher(Math.max(0, readInt(parameter, 9)));
+                    }
+                });
         addDiplomaticRedPanel(context, container, prefs);
         addPurplePanel(context, container, prefs);
 
@@ -1033,6 +1095,85 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         }
     }
 
+
+    private interface ParameterCipherFactory {
+        MessageCipher create(String parameter);
+    }
+
+    private void addParameterizedCipherPanel(final Context context, final LinearLayout container,
+            final SharedPreferences prefs, final int titleResId, final int parameterHintResId,
+            final String preferenceKey, final String defaultValue, final int parameterInputType,
+            final ParameterCipherFactory cipherFactory) {
+        final Button cipherButton = new Button(context);
+        cipherButton.setText(titleResId);
+        container.addView(cipherButton);
+
+        final LinearLayout cipherSettings = new LinearLayout(context);
+        cipherSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(cipherSettings);
+        cipherSettings.setVisibility(GONE);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        cipherSettings.addView(messageInput);
+
+        final EditText parameterInput = new EditText(context);
+        parameterInput.setHint(parameterHintResId);
+        parameterInput.setInputType(parameterInputType);
+        parameterInput.setText(prefs.getString(preferenceKey, defaultValue));
+        styleCipherInput(parameterInput);
+        cipherSettings.addView(parameterInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        cipherSettings.addView(encryptButton);
+
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        cipherSettings.addView(decryptButton);
+        container.addView(cipherSettings);
+
+        cipherButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                cipherSettings.setVisibility(
+                        cipherSettings.getVisibility() == VISIBLE ? GONE : VISIBLE);
+            }
+        });
+        encryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputParameterizedCipherText(prefs, preferenceKey, messageInput, parameterInput,
+                        cipherFactory, false);
+            }
+        });
+        decryptButton.setOnClickListener(new OnClickListener() {
+            @Override public void onClick(View v) {
+                outputParameterizedCipherText(prefs, preferenceKey, messageInput, parameterInput,
+                        cipherFactory, true);
+            }
+        });
+    }
+
+    private void outputParameterizedCipherText(final SharedPreferences prefs,
+            final String preferenceKey, final EditText messageInput, final EditText parameterInput,
+            final ParameterCipherFactory cipherFactory, final boolean decrypt) {
+        final String parameter = parameterInput.getText().toString();
+        prefs.edit().putString(preferenceKey, parameter).apply();
+        final MessageCipher cipher = cipherFactory.create(parameter);
+        final String input = messageInput.getText().toString();
+        outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
+    }
+
+    private int readInt(final String input, final int defaultValue) {
+        try {
+            return Integer.parseInt(input);
+        } catch (NumberFormatException ignored) {
+            return defaultValue;
+        }
+    }
 
     private void addRailFencePanel(final Context context, final LinearLayout container,
             final SharedPreferences prefs) {

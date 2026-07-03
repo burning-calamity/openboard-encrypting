@@ -119,6 +119,20 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             "pref_columnar_keyword";
     public static final String PREF_POLYBIUS_KEYWORD =
             "pref_polybius_keyword";
+    public static final String PREF_AUTOKEY_KEYWORD =
+            "pref_autokey_keyword";
+    public static final String PREF_BEAUFORT_KEYWORD =
+            "pref_beaufort_keyword";
+    public static final String PREF_GRONSFELD_KEY =
+            "pref_gronsfeld_key";
+    public static final String PREF_SCYTALE_COLUMNS =
+            "pref_scytale_columns";
+    public static final String PREF_PLAYFAIR_KEYWORD =
+            "pref_playfair_keyword";
+    public static final String PREF_BIFID_KEYWORD =
+            "pref_bifid_keyword";
+    public static final String PREF_ZALGO_INTENSITY =
+            "pref_zalgo_intensity";
     public static final String PREF_DIPLOMATIC_RED_KEYWORD =
             "pref_diplomatic_red_keyword";
     public static final String PREF_PURPLE_PLUGBOARD =

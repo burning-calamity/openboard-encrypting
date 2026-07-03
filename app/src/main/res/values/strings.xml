@@ -212,11 +212,23 @@
     <string name="rail_fence_cipher">Rail fence</string>
     <string name="columnar_transposition_cipher">Columnar transposition</string>
     <string name="polybius_square_cipher">Polybius square</string>
+    <string name="autokey_cipher">Autokey cipher</string>
+    <string name="beaufort_cipher">Beaufort cipher</string>
+    <string name="gronsfeld_cipher">Gronsfeld cipher</string>
+    <string name="scytale_cipher">Scytale</string>
+    <string name="rot47_cipher">ROT47</string>
+    <string name="trithemius_cipher">Trithemius cipher</string>
+    <string name="playfair_cipher">Playfair cipher</string>
+    <string name="bifid_cipher">Bifid cipher</string>
+    <string name="zalgo_cipher">Zalgo</string>
     <string name="cipher_keyword_hint">Keyword</string>
     <string name="affine_a_hint">A multiplier (coprime with 26)</string>
     <string name="affine_b_hint">B shift</string>
     <string name="rail_fence_rails_hint">Rails</string>
     <string name="polybius_keyword_hint">Polybius keyword (I/J share a cell)</string>
+    <string name="gronsfeld_key_hint">Numeric key</string>
+    <string name="scytale_columns_hint">Columns</string>
+    <string name="zalgo_intensity_hint">Intensity (try 9 or 1000)</string>
     <string name="purple_position_hint">Purple switch start (0-2)</string>
     <string-array name="cipher_direct_mode_labels">
         <item>@string/caesar_cipher</item>
