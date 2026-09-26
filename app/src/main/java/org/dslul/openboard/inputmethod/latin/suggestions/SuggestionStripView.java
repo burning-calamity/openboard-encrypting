@@ -61,6 +61,7 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.dslul.openboard.inputmethod.accessibility.AccessibilityUtils;
 import org.dslul.openboard.inputmethod.keyboard.Keyboard;
@@ -72,6 +73,8 @@ import org.dslul.openboard.inputmethod.latin.R;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
 import org.dslul.openboard.inputmethod.latin.ciphers.A1Z26Cipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.AesCbcHmacCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.AesGcmCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AffineCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AtbashCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AutokeyCipher;
@@ -720,6 +723,20 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
                         return new ZalgoCipher(Math.max(0, readInt(parameter, 9)));
                     }
                 });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            addPasswordCipherPanel(context, container, R.string.aes_gcm_cipher,
+                    new ParameterCipherFactory() {
+                        @Override public MessageCipher create(String parameter) {
+                            return new AesGcmCipher(parameter);
+                        }
+                    });
+        }
+        addPasswordCipherPanel(context, container, R.string.aes_cbc_hmac_cipher,
+                new ParameterCipherFactory() {
+                    @Override public MessageCipher create(String parameter) {
+                        return new AesCbcHmacCipher(parameter);
+                    }
+                });
         addDiplomaticRedPanel(context, container, prefs);
         addPurplePanel(context, container, prefs);
 
@@ -1098,6 +1115,65 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
     private interface ParameterCipherFactory {
         MessageCipher create(String parameter);
+    }
+
+    private void addPasswordCipherPanel(final Context context, final LinearLayout container,
+            final int titleResId, final ParameterCipherFactory cipherFactory) {
+        final Button cipherButton = new Button(context);
+        cipherButton.setText(titleResId);
+        container.addView(cipherButton);
+
+        final LinearLayout cipherSettings = new LinearLayout(context);
+        cipherSettings.setOrientation(LinearLayout.VERTICAL);
+        styleCipherPanel(cipherSettings);
+        cipherSettings.setVisibility(GONE);
+
+        final TextView notice = new TextView(context);
+        notice.setText(R.string.modern_cipher_notice);
+        notice.setTextColor(Color.DKGRAY);
+        cipherSettings.addView(notice);
+
+        final EditText messageInput = new EditText(context);
+        messageInput.setHint(R.string.cipher_message_hint);
+        messageInput.setMinLines(3);
+        messageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        styleCipherInput(messageInput);
+        prefillMessageInput(messageInput);
+        cipherSettings.addView(messageInput);
+
+        final EditText passwordInput = new EditText(context);
+        passwordInput.setHint(R.string.cipher_password_hint);
+        passwordInput.setInputType(InputType.TYPE_CLASS_TEXT
+                | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        styleCipherInput(passwordInput);
+        cipherSettings.addView(passwordInput);
+
+        final Button encryptButton = new Button(context);
+        encryptButton.setText(R.string.encrypt);
+        cipherSettings.addView(encryptButton);
+        final Button decryptButton = new Button(context);
+        decryptButton.setText(R.string.decrypt);
+        cipherSettings.addView(decryptButton);
+        container.addView(cipherSettings);
+
+        cipherButton.setOnClickListener(v -> cipherSettings.setVisibility(
+                cipherSettings.getVisibility() == VISIBLE ? GONE : VISIBLE));
+        encryptButton.setOnClickListener(v -> outputPasswordCipherText(
+                messageInput, passwordInput, cipherFactory, false));
+        decryptButton.setOnClickListener(v -> outputPasswordCipherText(
+                messageInput, passwordInput, cipherFactory, true));
+    }
+
+    private void outputPasswordCipherText(final EditText messageInput,
+            final EditText passwordInput, final ParameterCipherFactory cipherFactory,
+            final boolean decrypt) {
+        try {
+            final MessageCipher cipher = cipherFactory.create(passwordInput.getText().toString());
+            final String input = messageInput.getText().toString();
+            outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
+        } catch (IllegalArgumentException exception) {
+            Toast.makeText(getContext(), exception.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void addParameterizedCipherPanel(final Context context, final LinearLayout container,

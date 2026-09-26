@@ -224,6 +224,10 @@
     <string name="playfair_cipher">Playfair cipher</string>
     <string name="bifid_cipher">Bifid cipher</string>
     <string name="zalgo_cipher">Zalgo</string>
+    <string name="aes_gcm_cipher">AES-256-GCM</string>
+    <string name="aes_cbc_hmac_cipher">AES-256-CBC + HMAC</string>
+    <string name="cipher_password_hint">Password (not saved)</string>
+    <string name="modern_cipher_notice">Authenticated encryption for messages in any language. Share the password separately. Direct typing is unavailable because secure encryption requires a complete message.</string>
     <string name="cipher_keyword_hint">Keyword</string>
     <string name="affine_a_hint">A multiplier (coprime with 26)</string>
     <string name="affine_b_hint">B shift</string>
