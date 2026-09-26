@@ -1611,11 +1611,25 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (Settings.CIPHER_MODE_ZALGO.equals(mode)) {
             return codePoint > 0 && !Character.isWhitespace(codePoint);
         }
+        if (Settings.CIPHER_MODE_CAESAR.equals(mode)) {
+            return CaesarCipher.supports(codePoint);
+        }
+        if (Settings.CIPHER_MODE_ATBASH.equals(mode)) {
+            return AtbashCipher.supports(codePoint);
+        }
+        if (Settings.CIPHER_MODE_VIGENERE.equals(mode)
+                || Settings.CIPHER_MODE_GRONSFELD.equals(mode)
+                || Settings.CIPHER_MODE_TRITHEMIUS.equals(mode)) {
+            return CaesarCipher.supports(codePoint);
+        }
         return isAsciiLetter(codePoint);
     }
 
     private boolean shouldAdvanceDirectCipherPosition(final String mode, final int codePoint) {
-        if (!isAsciiLetter(codePoint)) {
+        if (!isAsciiLetter(codePoint)
+                && !Settings.CIPHER_MODE_VIGENERE.equals(mode)
+                && !Settings.CIPHER_MODE_GRONSFELD.equals(mode)
+                && !Settings.CIPHER_MODE_TRITHEMIUS.equals(mode)) {
             return false;
         }
         return Settings.CIPHER_MODE_ENIGMA_M3.equals(mode)

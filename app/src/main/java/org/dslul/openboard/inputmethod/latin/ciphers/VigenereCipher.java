@@ -1,14 +1,19 @@
 package org.dslul.openboard.inputmethod.latin.ciphers;
 
-import java.util.Locale;
-
 /** Vigenere polyalphabetic cipher. */
 public final class VigenereCipher implements PositionedMessageCipher {
     private final String mKeyword;
 
     public VigenereCipher(final String keyword) {
-        final String cleaned = keyword == null ? "" : keyword.toUpperCase(Locale.US).replaceAll("[^A-Z]", "");
-        mKeyword = cleaned.isEmpty() ? "KEY" : cleaned;
+        final StringBuilder cleaned = new StringBuilder();
+        if (keyword != null) {
+            for (int i = 0; i < keyword.length(); i++) {
+                if (CipherAlphabet.contains(keyword.charAt(i))) {
+                    cleaned.append(keyword.charAt(i));
+                }
+            }
+        }
+        mKeyword = cleaned.length() == 0 ? "KEY" : cleaned.toString();
     }
 
     @Override
@@ -36,16 +41,13 @@ public final class VigenereCipher implements PositionedMessageCipher {
         int letters = Math.max(0, position);
         for (int i = 0; i < input.length(); i++) {
             final char c = input.charAt(i);
-            final char upper = Character.toUpperCase(c);
-            if (upper < 'A' || upper > 'Z') {
+            if (!CipherAlphabet.contains(c)) {
                 output.append(c);
                 continue;
             }
-            final int shift = mKeyword.charAt(letters % mKeyword.length()) - 'A';
-            final int base = upper - 'A';
-            final int transformed = decrypt ? (base - shift + 26) % 26 : (base + shift) % 26;
-            final char result = (char)('A' + transformed);
-            output.append(Character.isLowerCase(c) ? Character.toLowerCase(result) : result);
+            final int shift = CipherAlphabet.position(
+                    mKeyword.charAt(letters % mKeyword.length()));
+            output.append(CipherAlphabet.shift(c, decrypt ? -shift : shift));
             letters++;
         }
         return output.toString();

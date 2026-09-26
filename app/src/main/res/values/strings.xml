@@ -180,6 +180,9 @@
     <string name="cipher_tools_title">Cipher tools</string>
     <string name="cipher_direct_input">Encrypt typed letters directly</string>
     <string name="cipher_direct_mode">Direct typing cipher</string>
+    <string name="emoji_search_button" translatable="false">🔎</string>
+    <string name="emoji_search_hint">Search emoji</string>
+    <string name="emoji_search_no_results">No matching emoji</string>
     <string name="cipher_message_hint">Message</string>
     <string name="caesar_cipher">Caesar cipher</string>
     <string name="caesar_shift">Shift</string>
@@ -477,6 +480,7 @@ language among those that use the Latin alphabet. This keyboard is laid out in t
 disposition that offers additional keys, but smaller keys compared to other common dispositions for
 mobile devices. [CHAR LIMIT=25] -->
     <string name="subtype_no_language_colemak_dh">Alphabet (Colemak Mod-DH)</string>
+    <string name="subtype_no_language_norman">Alphabet (Norman)</string>
     <!-- This string is displayed in the description for a keyboard type. It refers specifically to
 the Latin alphabet, as opposed to Cyrillic, Arabic, Hebrew or other scripts.
 When the device is configured to use a language using a script other than the Latin alphabet, the

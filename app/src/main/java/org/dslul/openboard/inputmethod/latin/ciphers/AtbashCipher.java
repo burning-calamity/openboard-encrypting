@@ -15,15 +15,12 @@ public final class AtbashCipher implements MessageCipher {
     private static String transform(final String input) {
         final StringBuilder output = new StringBuilder(input.length());
         for (int i = 0; i < input.length(); i++) {
-            final char c = input.charAt(i);
-            if (c >= 'A' && c <= 'Z') {
-                output.append((char)('Z' - (c - 'A')));
-            } else if (c >= 'a' && c <= 'z') {
-                output.append((char)('z' - (c - 'a')));
-            } else {
-                output.append(c);
-            }
+            output.append(CipherAlphabet.reverse(input.charAt(i)));
         }
         return output.toString();
+    }
+
+    public static boolean supports(final int codePoint) {
+        return CipherAlphabet.contains(codePoint);
     }
 }
