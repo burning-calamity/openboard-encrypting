@@ -21,9 +21,11 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -106,6 +108,8 @@ import org.dslul.openboard.inputmethod.latin.utils.DialogUtils;
 import org.dslul.openboard.inputmethod.latin.suggestions.MoreSuggestionsView.MoreSuggestionsListener;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.core.view.ViewCompat;
 
@@ -128,6 +132,9 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
     private final ImageButton mOtherKey;
     private EditText mCipherFocusedInput;
     private PopupWindow mCipherPopupWindow;
+    private int mCipherTaskGeneration;
+    private final Handler mCipherMainHandler = new Handler(Looper.getMainLooper());
+    private ExecutorService mCipherExecutor;
     MainKeyboardView mMainKeyboardView;
 
     private final View mMoreSuggestionsContainer;
@@ -778,6 +785,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         popupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
         popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override public void onDismiss() {
+                mCipherTaskGeneration++;
                 mCipherFocusedInput = null;
                 if (mCipherPopupWindow == popupWindow) {
                     mCipherPopupWindow = null;
@@ -1159,21 +1167,56 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         cipherButton.setOnClickListener(v -> cipherSettings.setVisibility(
                 cipherSettings.getVisibility() == VISIBLE ? GONE : VISIBLE));
         encryptButton.setOnClickListener(v -> outputPasswordCipherText(
-                messageInput, passwordInput, cipherFactory, false));
+                messageInput, passwordInput, cipherFactory, false,
+                encryptButton, decryptButton));
         decryptButton.setOnClickListener(v -> outputPasswordCipherText(
-                messageInput, passwordInput, cipherFactory, true));
+                messageInput, passwordInput, cipherFactory, true,
+                encryptButton, decryptButton));
     }
 
     private void outputPasswordCipherText(final EditText messageInput,
             final EditText passwordInput, final ParameterCipherFactory cipherFactory,
-            final boolean decrypt) {
-        try {
-            final MessageCipher cipher = cipherFactory.create(passwordInput.getText().toString());
-            final String input = messageInput.getText().toString();
-            outputText(decrypt ? cipher.decrypt(input) : cipher.encrypt(input));
-        } catch (IllegalArgumentException exception) {
-            Toast.makeText(getContext(), exception.getMessage(), Toast.LENGTH_LONG).show();
+            final boolean decrypt, final Button encryptButton, final Button decryptButton) {
+        final String password = passwordInput.getText().toString();
+        final String input = messageInput.getText().toString();
+        final PopupWindow originatingPopup = mCipherPopupWindow;
+        final int taskGeneration = mCipherTaskGeneration;
+        encryptButton.setEnabled(false);
+        decryptButton.setEnabled(false);
+        getCipherExecutor().execute(() -> {
+            String output = null;
+            String error = null;
+            try {
+                final MessageCipher cipher = cipherFactory.create(password);
+                output = decrypt ? cipher.decrypt(input) : cipher.encrypt(input);
+            } catch (RuntimeException exception) {
+                error = exception.getMessage() == null
+                        ? exception.getClass().getSimpleName() : exception.getMessage();
+            }
+            final String result = output;
+            final String failure = error;
+            mCipherMainHandler.post(() -> {
+                encryptButton.setEnabled(true);
+                decryptButton.setEnabled(true);
+                if (!isAttachedToWindow() || taskGeneration != mCipherTaskGeneration
+                        || originatingPopup == null || originatingPopup != mCipherPopupWindow
+                        || !originatingPopup.isShowing()) {
+                    return;
+                }
+                if (failure != null) {
+                    Toast.makeText(getContext(), failure, Toast.LENGTH_LONG).show();
+                } else {
+                    outputText(result);
+                }
+            });
+        });
+    }
+
+    private ExecutorService getCipherExecutor() {
+        if (mCipherExecutor == null || mCipherExecutor.isShutdown()) {
+            mCipherExecutor = Executors.newSingleThreadExecutor();
         }
+        return mCipherExecutor;
     }
 
     private void addParameterizedCipherPanel(final Context context, final LinearLayout container,
@@ -1733,7 +1776,21 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        dismissCipherPopup();
         dismissMoreSuggestionsPanel();
+        if (mCipherExecutor != null) {
+            mCipherExecutor.shutdownNow();
+            mCipherExecutor = null;
+        }
+    }
+
+    public void dismissCipherPopup() {
+        mCipherTaskGeneration++;
+        if (mCipherPopupWindow != null) {
+            mCipherPopupWindow.dismiss();
+            mCipherPopupWindow = null;
+        }
+        mCipherFocusedInput = null;
     }
 
     @Override

@@ -51,7 +51,7 @@ public final class AesGcmCipher implements MessageCipher {
         }
         try {
             final byte[] payload = CipherBase64.decode(input.substring(PREFIX.length()));
-            if (payload.length <= SALT_BYTES + NONCE_BYTES + TAG_BITS / 8) {
+            if (payload.length < SALT_BYTES + NONCE_BYTES + TAG_BITS / 8) {
                 throw new IllegalArgumentException("AES-GCM message is truncated");
             }
             final byte[] salt = slice(payload, 0, SALT_BYTES);
