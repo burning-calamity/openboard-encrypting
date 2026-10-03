@@ -1572,7 +1572,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             return null;
         }
         final String input = new String(Character.toChars(codePoint));
-        final String output = transformDirectCipherInput(mode, input);
+        final String output = applyDirectCipher(mode, input);
         final boolean advancePosition = shouldAdvanceDirectCipherPosition(mode, codePoint);
         if (advancePosition) {
             mDirectCipherPosition++;
@@ -1675,7 +1675,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         return (codePoint >= 'A' && codePoint <= 'Z') || (codePoint >= 'a' && codePoint <= 'z');
     }
 
-    private String transformDirectCipherInput(final String mode, final String input) {
+    private String applyDirectCipher(final String mode, final String input) {
         if (Settings.CIPHER_MODE_ENIGMA_M3.equals(mode)) {
             return transformStatefulDirectCipher(createDirectEnigmaM3Cipher(), input);
         }
