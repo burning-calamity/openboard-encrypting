@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:latin="http://schemas.android.com/apk/res-auto">
+    <switch>
+        <case latin:keyboardLayoutSetElement="alphabetManualShifted|alphabetShiftLocked|alphabetShiftLockShifted">
+            <Key latin:keySpec="ス" latin:moreKeys="ず,ス,ズ" />
+            <Key latin:keySpec="セ" latin:moreKeys="ぜ,セ,ゼ" />
+            <Key latin:keySpec="ソ" latin:moreKeys="ぞ,ソ,ゾ" />
+            <Key latin:keySpec="タ" latin:moreKeys="だ,タ,ダ" />
+            <Key latin:keySpec="チ" latin:moreKeys="ぢ,チ,ヂ" />
+            <Key latin:keySpec="ツ" latin:moreKeys="っ,づ,ツ,ッ,ヅ" />
+            <Key latin:keySpec="テ" latin:moreKeys="で,テ,デ" />
+            <Key latin:keySpec="ト" latin:moreKeys="ど,ト,ド" />
+            <Key latin:keySpec="ナ" latin:moreKeys="ナ" />
+            <Key latin:keySpec="ニ" latin:moreKeys="ニ" />
+            <Key latin:keySpec="ヌ" latin:moreKeys="ヌ" />
+            <Key latin:keySpec="ネ" latin:moreKeys="ネ" />
+        </case>
+        <default>
+            <Key latin:keySpec="す" latin:moreKeys="ず,ス,ズ" />
+            <Key latin:keySpec="せ" latin:moreKeys="ぜ,セ,ゼ" />
+            <Key latin:keySpec="そ" latin:moreKeys="ぞ,ソ,ゾ" />
+            <Key latin:keySpec="た" latin:moreKeys="だ,タ,ダ" />
+            <Key latin:keySpec="ち" latin:moreKeys="ぢ,チ,ヂ" />
+            <Key latin:keySpec="つ" latin:moreKeys="っ,づ,ツ,ッ,ヅ" />
+            <Key latin:keySpec="て" latin:moreKeys="で,テ,デ" />
+            <Key latin:keySpec="と" latin:moreKeys="ど,ト,ド" />
+            <Key latin:keySpec="な" latin:moreKeys="ナ" />
+            <Key latin:keySpec="に" latin:moreKeys="ニ" />
+            <Key latin:keySpec="ぬ" latin:moreKeys="ヌ" />
+            <Key latin:keySpec="ね" latin:moreKeys="ネ" />
+        </default>
+    </switch>
+</merge>

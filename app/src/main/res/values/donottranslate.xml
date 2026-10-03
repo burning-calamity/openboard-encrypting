@@ -59,6 +59,7 @@
         <item>workman</item>
         <item>bepo</item>
         <item>pcqwerty</item>
+        <item>japanese_kana</item>
     </string-array>
     <!-- Predefined keyboard layout display names -->
     <string-array name="predefined_layout_display_names">
@@ -73,6 +74,7 @@
         <item>Workman</item>
         <item>Bépo</item>
         <item>PC</item>
+        <item>Japanese Kana</item>
     </string-array>
     <!-- Description for generic subtype that has predefined layout.
          The string resource name must be "subtype_generic_<layout name>".
@@ -88,6 +90,7 @@
     <string name="subtype_generic_workman" translatable="false">%s (Workman)</string>
     <string name="subtype_generic_bepo" translatable="false">%s (Bépo)</string>
     <string name="subtype_generic_pcqwerty" translatable="false">%s (PC)</string>
+    <string name="subtype_generic_japanese_kana" translatable="false">%s (Kana)</string>
 
     <!-- Description for Bulgarian (BDS) subtype. -->
     <string name="subtype_bulgarian_bds" translatable="false">%s (BDS)</string>
@@ -126,6 +129,8 @@
         <item>qwertz</item>
         <item>it:AsciiCapable,SupportTouchPositionCorrection,EmojiCapable</item>
         <item>qwerty</item>
+        <item>ja:SupportTouchPositionCorrection,EmojiCapable</item>
+        <item>japanese_kana</item>
         <item>iw:SupportTouchPositionCorrection,EmojiCapable</item>
         <item>hebrew</item>
         <item>nb:AsciiCapable,SupportTouchPositionCorrection,EmojiCapable</item>
