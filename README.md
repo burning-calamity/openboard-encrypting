@@ -1,6 +1,8 @@
 # Steganographia
 
-**Steganographia: hoc est, ars per occultam scripturam animi voluntatem absentibus aperiendi certa** is a privacy-focused Android keyboard with integrated classical and modern cipher tools, direct cipher typing, emoji search, and multiple keyboard layouts.
+**ars per occultam scripturam animi voluntatem absentibus** is a privacy-focused Android keyboard with integrated classical and modern cipher tools, direct cipher typing, emoji search, and multiple keyboard layouts, including a Japanese Kana keyboard with Hiragana and Katakana layers.
+
+The cipher toolbox also includes ROT13, Unicode-safe text reversal, and classical Tap code alongside the existing cipher collection.
 
 <p align="center"><img src="fastlane/metadata/android/en-US/images/icon.png" height="192" alt="Steganographia keyboard lock icon"></p>
 
@@ -20,7 +22,14 @@ Before importing a source archive, verify that it does not contain a duplicated 
 python3 tools/check-direct-cipher-source.py
 ```
 
-If Android Studio reports that `getDirectCipherText`, `resetDirectCipherState`, or related methods are already defined, the local `LatinIME.java` contains two historical versions of the direct-cipher implementation. Replace that file with the tracked repository version, then run **Build > Clean Project**. In the canonical file, the cipher helper block ends before `onEvent`; do not merge another helper block after it.
+If Android Studio reports that `getDirectCipherText`, `resetDirectCipherState`, or related methods are already defined, the local `LatinIME.java` contains two historical versions of the direct-cipher implementation. Repair that checkout with:
+
+```sh
+python3 tools/fix-duplicate-direct-cipher-source.py
+python3 tools/check-direct-cipher-source.py
+```
+
+The repair creates a `.duplicate-backup` beside `LatinIME.java`. Then run **Build > Clean Project** and **Build > Rebuild Project**. In the canonical file, the cipher helper block ends before `onEvent`; do not merge another helper block after it.
 
 ## License and attribution
 

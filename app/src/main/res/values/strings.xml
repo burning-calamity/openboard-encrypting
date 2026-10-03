@@ -17,7 +17,7 @@
 ** limitations under the License.
 */
 --><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="english_ime_name" translatable="false">Steganographia: hoc est, ars per occultam scripturam animi voluntatem absentibus aperiendi certa</string>
+    <string name="english_ime_name" translatable="false">ars per occultam scripturam animi voluntatem absentibus</string>
     <!-- Name of Android spell checker service. AOSP(Android Open Source Project) should not be translated.
          This resource should be copied from msgid="511950477199948048" -->
     <string name="spell_checker_service_name">Steganographia Spell Checker</string>
@@ -223,6 +223,9 @@
     <string name="trithemius_cipher">Trithemius cipher</string>
     <string name="playfair_cipher">Playfair cipher</string>
     <string name="bifid_cipher">Bifid cipher</string>
+    <string name="rot13_cipher">ROT13</string>
+    <string name="reverse_cipher">Reverse text</string>
+    <string name="tap_code_cipher">Tap code</string>
     <string name="zalgo_cipher">Zalgo</string>
     <string name="aes_gcm_cipher">AES-256-GCM</string>
     <string name="aes_cbc_hmac_cipher">AES-256-CBC + HMAC</string>

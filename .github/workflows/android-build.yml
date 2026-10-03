@@ -26,6 +26,8 @@ jobs:
 
       - name: Validate direct cipher source
         run: python3 tools/check-direct-cipher-source.py
+      - name: Validate product identity and Japanese layout
+        run: python3 tools/check-product-resources.py
 
       - name: Build with Gradle
         run: ./gradlew assembleDebug

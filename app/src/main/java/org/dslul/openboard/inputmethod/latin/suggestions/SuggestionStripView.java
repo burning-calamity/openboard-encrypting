@@ -16,7 +16,6 @@
 
 package org.dslul.openboard.inputmethod.latin.suggestions;
 
-import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -33,12 +32,8 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.GestureDetector;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -48,8 +43,6 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.ViewParent;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -76,7 +69,6 @@ import org.dslul.openboard.inputmethod.latin.SuggestedWords;
 import org.dslul.openboard.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
 import org.dslul.openboard.inputmethod.latin.ciphers.A1Z26Cipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AesCbcHmacCipher;
-import org.dslul.openboard.inputmethod.latin.ciphers.AesGcmCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AffineCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AtbashCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.AutokeyCipher;
@@ -97,6 +89,9 @@ import org.dslul.openboard.inputmethod.latin.ciphers.QuagmireCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.RailFenceCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.ScytaleCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.Rot47Cipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.Rot13Cipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.ReverseCipher;
+import org.dslul.openboard.inputmethod.latin.ciphers.TapCodeCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.TrithemiusCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.VigenereCipher;
 import org.dslul.openboard.inputmethod.latin.ciphers.ZalgoCipher;
@@ -104,7 +99,6 @@ import org.dslul.openboard.inputmethod.latin.common.Constants;
 import org.dslul.openboard.inputmethod.latin.define.DebugFlags;
 import org.dslul.openboard.inputmethod.latin.settings.Settings;
 import org.dslul.openboard.inputmethod.latin.settings.SettingsValues;
-import org.dslul.openboard.inputmethod.latin.utils.DialogUtils;
 import org.dslul.openboard.inputmethod.latin.suggestions.MoreSuggestionsView.MoreSuggestionsListener;
 
 import java.util.ArrayList;
@@ -707,6 +701,9 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
                     }
                 });
         addSimpleCipherPanel(context, container, R.string.rot47_cipher, new Rot47Cipher());
+        addSimpleCipherPanel(context, container, R.string.rot13_cipher, new Rot13Cipher());
+        addSimpleCipherPanel(context, container, R.string.reverse_cipher, new ReverseCipher());
+        addSimpleCipherPanel(context, container, R.string.tap_code_cipher, new TapCodeCipher());
         addSimpleCipherPanel(context, container, R.string.trithemius_cipher,
                 new TrithemiusCipher());
         addParameterizedCipherPanel(context, container, prefs, R.string.playfair_cipher,
@@ -734,7 +731,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
             addPasswordCipherPanel(context, container, R.string.aes_gcm_cipher,
                     new ParameterCipherFactory() {
                         @Override public MessageCipher create(String parameter) {
-                            return new AesGcmCipher(parameter);
+                            return createAesGcmCipher(parameter);
                         }
                     });
         }
@@ -800,7 +797,20 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         popupWindow.showAsDropDown(this, 0, -getHeight() - popupHeight);
     }
 
-
+    /**
+     * Keep the API-21-only AES-GCM implementation out of this startup class's verifier graph.
+     * Android 4.4 verifies SuggestionStripView as soon as the keyboard opens, even when the
+     * guarded branch below cannot execute on that OS version.
+     */
+    private static MessageCipher createAesGcmCipher(final String password) {
+        try {
+            final Class<?> cipherClass = Class.forName(
+                    "org.dslul.openboard.inputmethod.latin.ciphers.AesGcmCipher");
+            return (MessageCipher)cipherClass.getConstructor(String.class).newInstance(password);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("AES-GCM is unavailable on this device", exception);
+        }
+    }
 
     private void prefillMessageInput(final EditText messageInput) {
         if (mListener == null) {
