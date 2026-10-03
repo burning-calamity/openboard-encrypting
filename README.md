@@ -14,14 +14,6 @@ Import the project into Android Studio or build it with the checked-in wrapper:
 
 The project uses JDK 17, Gradle 8.5, and the Android Gradle Plugin declared in the root build file.
 
-Before importing a source archive, verify that it does not contain a duplicated cipher block:
-
-```sh
-python3 tools/check-direct-cipher-source.py
-```
-
-If Android Studio reports that `getDirectCipherText`, `resetDirectCipherState`, or related methods are already defined, the local `LatinIME.java` contains two historical versions of the direct-cipher implementation. Replace that file with the tracked repository version, then run **Build > Clean Project**. In the canonical file, the cipher helper block ends before `onEvent`; do not merge another helper block after it.
-
 ## License and attribution
 
 This project is distributed under the GNU General Public License v3.0. See [LICENSE](LICENSE).
